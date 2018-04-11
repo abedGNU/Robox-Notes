@@ -1,0 +1,293 @@
+%----------------------------------------------------------------------------------------
+%	CHAPTER 
+%----------------------------------------------------------------------------------------
+
+\chapterimage{chapter_head_2.pdf} % Chapter heading image
+
+\chapter{AGV Manager}
+
+\section{Overview}
+AGV Manager have 2 software components: AGV manager it self and AGV configurator.
+In AGV configurator are set some parameters like the map file directory, script directory, communication with the AGVs controllers, PLC communication and IO definition, database communication, emulator enabling, etc.
+
+AGV manager will load the parameters set by Agv configurator, and main execute the script written for the specified plant. In AGV manager can be shown the map and motion simulation and modify the script. The script is written in XScript language (Robox scripting language) and executed by AGV manager.
+
+\begin{figure}
+	\centering\includegraphics[scale=0.4]{agvmanager/agvManager/agvManagerMain}
+	\caption{AGV Manager main window}
+	\label{fig:agvManagerMain}
+\end{figure}
+
+\section{Installation}
+The installation of AgvManger is straightforward, like any program in Microsoft Windows. AgvConfigurator is installed automatically with AgvManager.
+
+In order to get the report from AgvManager a database should be installed. You can install MySql community version.
+
+\section{AGV configurator}
+
+AGV configurator is a standalone program that create a configuration file \textit{.fdoc} for AGV manager. From AgvConfigurator you can select the script to be executed by AgvManager fig.\ref{fig:refConfigScript}, select the map fig.\ref{fig:refConfigMap} and agv \ref{fig:refConfigAgv} and plc communication.
+Project folder should be placed in the the AgvManager folder, otherwise it will not work. The script file should be in the first level of the project folder, it can't be placed in subdirectories, for example "\textit{AgvManager/Project01/scripts/main.xs}" is not allowed.
+
+\begin{figure}
+	\centering\includegraphics[scale=0.5]{agvmanager/agvManager/agvConfigGeneral1}
+	\caption{AGV configurator. General tab, where the \textit{.xs} script file is selected. The script have to be created by an external editor. It is enough to write the name of the executable file with .xb extension, when AgvManager comple the xs file, the xb file will be created automatically.}
+	\label{fig:refConfigScript}
+\end{figure}
+\begin{figure}
+	\centering\includegraphics[scale=0.5]{agvmanager/agvManager/agvConfigMap}
+	\caption{AGV configurator. Map tab, where the \textit{.map} file is selected. In order to view the user point, you have to set the width and height of it, otherwise user points are not viewed.}
+	\label{fig:refConfigMap}
+\end{figure}
+\begin{figure}
+	\centering\includegraphics[scale=0.5]{agvmanager/agvManager/agvConfigAgv}
+	\caption{AGV configurator. AGV tab, where communication parameter with the AGV are set.}
+	\label{fig:refConfigAgv}
+\end{figure}
+
+\section{AGV script executing}
+AGV manager can be compared to a plc (hardware and firmaware) and the script to a plc program. The firmware is the same in all plant (beside updates and new functionality) and the script change from plant to another.
+
+AGV scripts aer witten in Xscript languagee. Xscript have some OOP properties (creating classes and objects), some event handling (mouse move event) and callback functions.
+
+%\newpage
+\subsection{Fundamental concepts}
+Callback functions are called automatically by AgvManager. A list of callback functions can be found in the documentation \textit{x-script interface, Modules, Estensione x-script per AgvManager, Functions called by AgvManager (callbacks)}.
+
+For example the callback function \textit{OnApplicationStart() : bool} is called once, at the first execution of the script, and the function \textit{OnApplicationStop() : bool} is called when the script execution is stopped.
+
+An example of mouse event handling is the function \textit{onAgvDroppedToPoint (uint uagv, uint upointid, uint orientation)}.
+When the agv is dragged and dropped to a point, agv manager call automatically the function onAgvDroppedToPoint() and the code implemented will be executed. As input parameters, the agv index (agv 1 have index 0), destination point and orientation are passed.
+
+In the following section we will se when other callback function are called by AgvManager.\\
+
+Some variable definitions (using \#define keyword) can be found in the documentation \textit{x-script interface, Modules, Estensione x-script per AgvManager, Funzioni per la gestione degli agv}. For example the AGV operative modes can be find with the prefix "MOD\_ ", i.e. MOD\_AUTOMATICO.\\
+
+The following concepts have to be understood before proceeding: Mission, MACRO, MICRO and operations.
+
+Let's say a vehicle have to go from $P_{1}$ to $P_{2}$. This can be considered a mission. A Mission is started by calling \textit{agvStartMission(agv id, missionCode, mission description)} and terminated by calling \textit{agvStopMission(agv id)}.
+
+A mission can be composed from different MACROs. Let's say a MACRO is a macro operation that subdivide the mission. For example our mission can have 3 different MACROs. If the AGV is charging the battery, we have to stop charging (if the energy is enough to execute the whole mission), move to destination, communicate the end of the mission.
+
+Using the 2 defined constants by AgvManager our mission is composed from : MAC\_CHARGE\_STOP, MAC\_END and another macro that we can define using the \$define keyword MAC\_MOVE\_TO\_P.
+It is better to define our constants from 100 to avoid errors in the program logic. For example if the already defined constant MAC\_END have value 10, and our constant MAC\_MOVE\_TO\_P have value 10, the compiler will not give errors and the agv will behave as is not expected.
+
+AgvManager have in memory a list(array) of the MACROs to be executed. In the list are saved the agv number/id, MACRO code/id and other 4 parameters. 
+When the function 
+\textit{agvaddmacro	(	uint 	uagv,
+	uint 	ucode,
+	int 	ipar1 = 0,
+	int 	ipar2 = 0,
+	int 	ipar3 = 0,
+	int 	ipar4 = 0 
+	)		} 
+is called, the new MACRO is queued at the end of the list.
+
+A MACRO is composed from MICROs. Let's say, low level micro instructions to be executed by the AGV. There are different types of MICRO, can be found in the constant defintions with prefix MIC\_. For example MIC\_MOVE is a MICRO that handle the motion instruction to the AGV.
+
+A micro is registered (ask to be executed) by calling AgvRegisterSystemBloccante, agvRegisterSystemPassante or AgvRegisterOperation.
+
+An operation is a type of MICRO, a typical kind of operations are loading and unloading, and can be performed on user points.
+More about MICRO and operations later and the commands sent to the agv in order to execute orders from AgvManager. Remember that not all MIC instruction send commands to the agv. 
+
+\subsection{Main loop execution}
+The following is a simplified explanation of the main loop of and AGV script, which is in execution behind the scene. A more complex scenario is shown in fig.\ref{fig:mainLoop}.
+When the script is executed the first time, the function OnApplicationStart() is called. In this function you can initialize some variables and set some parameters. After that AgvManager wait for events e.g. mouse events, or operating mode change. And continue to execute some other functions.
+
+Let's see a simple case. The AGV is in automatic mode (MOD\_AUTOMATIC), and there is no mission in progress. If the AGV is enabled, AgvManager call automatically the callback function \textit{onNextMission()}, where the programmer have implemented a logic to register the next mission to be executed. When a mission is in progress, AgvManager wait (wait doesn't mean stop script execution) till the end of the mission in order to call again onNextMission().
+
+\begin{figure}
+	\centering\includegraphics[scale=0.5]{agvmanager/mainloop}
+	\caption{Main loop execution}
+	\label{fig:mainLoop}
+\end{figure}
+
+\subsection{Mission execution}
+A mission is a set of MACROs. There is a list of MACROs, where the order of execution is assigned.
+A mission can be assigned by a call to \textit{onNextMission()}, and started by calling \textit{AgvStartMission()}.
+If the list of MACROs is not empty, the effective execution of the mission begin otherwise the old MICRO continue to execute until the end.
+
+We take only one case, if the MACRO list is not empty, the function \textit{onExpandMacro()} is called by AgvManager.
+Then \textit{onExecuteMicro()} is called until the end of the MICRO execution. At the last call of \textit{onExecuteMicro()} the paramater \textit{bLastCall} is assigned to true.
+
+Fig.\ref{fig:missionExec} show a flow chart about the mission execution.
+That is a single step of the mission. We have to imagine that AgvManager continue to call every function like a plc, cyclically.
+
+\begin{figure}
+	\centering\includegraphics[scale=0.5]{agvmanager/missionExec}
+	\caption{Main loop execution}
+	\label{fig:missionExec}
+\end{figure}
+
+\section{Drag and drop example}
+Let's consider a simple example. We have to write a script that react to mouse events from user. The vehicle have to move from one point to another.
+
+First let's make a simple map, fig.\ref{fig:mapLine}, with one line $L_{1}$ and two generic points $P_{10}$ and $P_{20}$, the script will work on any map.
+After the configuration with AgvConfigurator, we open AgvManager in order to write the script and simulate.
+Notice that, after any modification of the script, AgvManager must be closed then opened.\\
+
+\begin{figure}
+	\centering\includegraphics[scale=0.6]{agvmanager/agvManager/mapLine}
+	\caption{Agv simple map, for drag and drop example. One line and two generic points.}
+	\label{fig:mapLine}
+\end{figure}
+
+A simple program like this, should have at least the following callback functions:
+\begin{enumerate}  
+	\item OnApplicationStart() : bool 
+	\item OnAgvDroppedToPoint(uint uAgv, uint uUser) 
+	\item OnExpandMacro(uint uAgv, uint uMission, uint iMacroCode, int iPar1, int iPar2, int iPar3, int) : bool
+	\item OnExecuteMicro(uint uAgv, bool bLastCall, int iMicroCode, int iPar0, int iPar1, int iPar2, int, int, int userId, int iMission, int) : bool
+	\item OnAbortMission(uint uAgv)\\
+\end{enumerate}
+
+For simplicity we don't implement our own functions. Attached to this document will be provided the example we discuss here, and an equivalent example where other functions and files were added in order to keep the projects modular.
+The modular example is organized as follow: 3 files, 5 callback functions, 2 user-defined functions and some variable and constant definitions.
+A file called main.xs contain the inclusion of the other 2 files. A file called agvEventFunctions.xs where callback functions are implemented.
+A file called common.xs where common functions and variables definitions are implemented. This strucutre is meant to be a template for future projects, as many functions can be reused. Of course other files and functions can be implemented. The structure of any project should be modular, portable and reusable.\\
+
+The single file example have 5 callback functions and some constant definitions. By convention, constants are written using capital letters.
+We will discuss the functions in order of execution. The function \textit{onAbortMission()} is called when a mission is aborted, it will be discussed at the end.
+
+\subsubsection{onApplicationStart()}
+The implementation of this function is shown in listing \ref{lbl_onApplicationStart}. As we say before, this is the first function called by agvManager.
+first we create a variable \textit{mpar} of type \textit{XMapParms}. This is a structure that will contain informations about the vehicle.
+By the function \textit{agvGetMapParams(xmapparams\&)} we read the existing data from AgvManager and we initialize the variable mpar with those data.
+We change some parameter using the dot operator of the structure, for example we set the dimension of the vehicle i.e. \textit{mpar.setSymmetricalVehicleDimension(length, width)}. After we apply the changes to AgvManager using the function \textit{AgvSetMapParams(@mpar)}.
+
+When the execution of this fucntion is done, AgvManager wait for some event. Let's suppose, the user drag the agv, in this case the event function \textit{OnAgvDroppedToPoint} is called.
+
+
+\lstinputlisting[language=c++, firstline=107, lastline=147, caption=onApplicationStart implementation, label=lbl_onApplicationStart]{listing/agvDropToPoint_v0.xs}
+
+\subsubsection{OnAgvDroppedToPoint(uint uAgv, uint uPointId) }
+The call of this function is a response of mouse event. There are other mouse events like \textit{onAgvDroppedToLine()}.
+In this function we set the behavior of the agv, what the agv have to do when it is dragged e.g. from $P_{10}$ and dropped to point $P_{20}$.
+First let's put some requirements e.g. the agv should be in automatic mode, it should not be enabled, there is no mission in progress.
+If those conditions are meeted the agv can move from one point to another. The code to control such conditions is self-explainatory in listing.\ref{lbl:OnAgvDroppedToPoint}.\\
+
+This example will have only one mission, moving from one point to another. A mission should have at least one MACRO, every mission should have MAC\_END. This MACRO inform the manager that it reach the end of the mission.
+There are some predefined constants for system used MACROs, they can be found in the documentation with the prefix MAC\_.
+We can also define our own MACROs using the keyword Define. It is a good practice to use numbers from 100, every MACRO and mission should have a unique identifier.\\
+
+Let's define our mission and a new MACRO:
+\begin{lstlisting}[frame=single]
+	; Mission null, ther is no mission
+	$define MIS_NULL								0
+	; Mission move to point
+	$define MIS_TO_POINT						14
+	
+	; MACRO Movement to waypoint
+	$define MAC_MOVE_TO_WP					100
+\end{lstlisting}
+
+In this case the mission MIS\_TO\_POINT is composed from 2 MACROs. In order the \textit{MACRO list} will have 2 elements:
+\begin{enumerate}
+	\item MAC\_MOVE\_TO\_WP
+	\item MAC\_END \\
+\end{enumerate}
+
+Before starting a new mission we check if there is a mission in progress.
+We call the function \textit{AgvActualMissionCode(uint uAgvId)}, this function return the id of the mission in progress.
+If it return zero, it means there is no mission in progress. We have already define a constant MIS\_NULL as zero.
+In the code we can write "\textit{if(AgvActualMissionCode(uAgv)=0)}", but it is always more readable when using names instead of numbers, so instead of 0 we use MIS\_NULL.\\
+
+If there is no mission in progress, we can start the mission MIS\_TO\_POINT by calling the function \textit{bool AgvStartMission(uint uAgvId, uint CodeMissione, string sMissioneDescription)}, this function return true if the mission is in progress.
+
+Now we have to fill the agv \underline{MACRO list} with our 2 MACROs, by calling the funntion \textit{bool agvAddMacro(uint uAgv,uint uCodeMACRO, int ipar1=0,int ipar2=0, int iapr3=0, int ipar4=0)}. The iparX have 0 as default value.
+
+The first MACRO is MAC\_MOVE\_TO\_WP, this is a motion MACRO. So we have to build the path of the agv by calling the function AgvAddWaypoint(), this function take as parameters the agv id, the point id and direction and return an id of the point.
+
+Then the MAC\_MOVE\_TO\_WP can be add to the list, by calling agvAddMacro(), giving it as ipar1 the return value of the function AgvAddWaypoint() and as ipar2 a flag to concatenate the execution of the next MACRO.
+Then the macro MAC\_END that end our mission is add to the macro's list.
+
+\begin{lstlisting}
+	AgvStartMission(uAgv, MIS_TO_POINT, "Mission to point")
+	;
+	uint wpidx
+	uchar destOrientation = 'X'
+	bool concatenateNext = true
+	;
+	wpidx = AgvAddWaypoint(uAgv, uUser, destOrientation)
+	AgvAddMacro(uAgv, MAC_MOVE_TO_WP, wpidx, concatenateNext)
+	;
+	AgvAddMacro(uAgv, MAC_END, MIS_TO_POINT)
+\end{lstlisting}	
+
+
+\lstinputlisting[language=c++, firstline=279, lastline=310, caption=OnAgvDroppedToPoint implementation. This function\, as input\, have the AGV id and the destination point id. This is an evznt function\, it is called when the user drag and drop the vehicle to the desired point, label=lbl:OnAgvDroppedToPoint]{listing/agvDropToPoint_v0.xs}
+
+\subsubsection{OnExpandMacro()}
+As we mentioned before, when a mission begin the function OnExpandMacro() is called automatically by AgvManager. We already started a mission in the function  OnAgvDroppedToPoint() and filled the MACRO list with 2 MACROs. So now we have to implement the function OnExpandMacro().
+
+AgvManager executes the MACROs starting from the first one in the list. When it call the function OnExpandMacro(), give it the Agv id, mision id, MARCO code/id and the four parameters stored in the list. We can imagine every elements of the list, is composed from those fields. So in the implementation of this function we check the MACRO code to be executed. We can use the case statement or the if in order to select our logic.
+
+The first MACRO is MAC\_MOVE\_TO\_WP. Under the case MAC\_MOVE\_TO\_WP we implement the instructions to AgvManager:
+
+\begin{lstlisting}
+	case MAC_MOVE_TO_WP
+		; iPar1 = Waypoint id
+		; iPar2 = (bool) do concatenate next macro
+			select (AgvMoveToWayPoint(uAgv, uMission, WpFl_RicalcolaPercorsi | WpFl_EliminaCompletato))
+				case EsitoMov_MovimentoCompletato	; Completed movement
+				case EsitoMov_RaggiuntoWaypoint		; Waypoint reached
+					if (iPar2)
+						AgvComputeNextMacro(uAgv)
+					endif
+					return true
+				default
+					return false
+			endselect
+		return true
+\end{lstlisting}
+
+In this code the motion instruction is done by calling \textit{AgvMoveToWayPoint()}, when this function return a value corresponding to \textit{MoveResult\_WaypointReached}, the next MACROs is expanded. The next MACRO in the list is the end MACRO.\\
+
+As we say every MACRO consist of different MICROs. A MACRO that correspond to a motion have a MIC\_MOVE. Here the MIC\_MOVE is registered by the call of the movement function \textit{AgvMoveToWayPoint()}.
+
+The MAC\_END register a MIC\_SYSTEM micro type. When the MAC\_END is expanded, it start or register a new micro. Simply this MACRO have only one MIC\_SYSTEM micro type that is S\_END.
+
+This MICRO inform AgvManager that the mission is ended. In the case MAC\_END the micro S\_END is registered by calling \textit{AgvRegisterSystemBloccante(uAgv, uMission, S\_END)}, where the fucntion \textit{agvStopMission(uagv)} is called, as we will see in the function \textit{onExecuteMicro()}.\\
+
+As shown in fig.\ref{fig:missionExec}, AgvManager continue to call onExpandMacro() and onExcecuteMicro().
+
+When the onExpandMacro() terminate the function onExcecuteMicro() is called.\\
+
+In the tab \textit{vehicle informations[F3]}, under Agv commands we can se a list of missions, macros expansion and micro instructions, as well as informations about them, fig.\ref{fig:macro_expansion_1}, fig.\ref{fig:macro_expansion_2} and fig.\ref{fig:macro_expansion_3}.\\
+
+\begin{figure}
+	\centering\includegraphics[scale=0.7]{agvmanager/agvManager/macro_expansion_1}
+	\caption{Movment to point 1007, Macro MAC\_MOVE\_TO\_WP=100. As we can see, the macro consist of a list MICROs. Selecting a mission or a macro or a micro we can see informations about them.}
+	\label{fig:macro_expansion_1}
+\end{figure}
+\begin{figure}
+	\centering\includegraphics[scale=0.7]{agvmanager/agvManager/macro_expansion_2}
+	\caption{Movement to point 1007, Macro MAC\_END=7. As we can see, the macro consist of on system micro that is S\_END.}
+	\label{fig:macro_expansion_2}
+\end{figure}
+\begin{figure}
+	\centering\includegraphics[scale=0.7]{agvmanager/agvManager/macro_expansion_3}
+	\caption{Mission load from a user point. The macro expansion shows 3 macros in the list. The MACRO 102, user defined, have only one micro of type operation that is O\_LOAD, system defined. Later we will the commands sent to agv in order to execute operations.}
+	\label{fig:macro_expansion_3}
+\end{figure}
+
+\lstinputlisting[language=c++, firstline=170, lastline=215, caption=OnExpandMacro, label=lbl:OnExpandMacro]{listing/agvDropToPoint_v0.xs}
+
+\subsubsection{OnExecuteMicro()}
+
+MICROs are instructions to the vehicle. MICROs are stored in a list, one MACRO can register more than one MICRO fig.\ref{fig:macro_expansion_1}.
+
+For example a MICRO can be registered by calling \textit{agvRegisterSystemBloccante()} or  \textit{agvRegisterSystemPassante()} for MIC\_SYSTEM type or \textit{AgvRegisterOperation()} for MIC\_OPERATION type. See documentation for a more complete list of micro registration functions.
+These function have uAgv, uMission, MICROcode as input parameters.
+
+There are different types of MICROs, that can be found in the documentation with prefix MIC\_. Let's see MIC\_SYSTEM to which the S\_END belong, this type of MICRO doesn't send any instruction to the agv itself. For example S\_END is need to end a mission, and is managed by AgvManager.
+
+A MIC\_MOVE type is related to instruction of motion sent to the agv. A MIC\_OPERATION is an operation like loading and unloading. \\
+
+There are 2 kinds of micros: blocking and non-blocking MICROs. The difference is that the blocking MICRO lock the execution of other micros till the end of the execution of itself or till the verification of a condition. \\
+
+When expanding macros, the micro list is composed by calling the relative registration function.
+For example, in the function \textit{OnExpandMacro()} under the MAC\_END, we register a blocking system micro, S\_END.
+In the function \textit{onExecuteMicro()} under the case MIC\_SYSTEM and under the case S\_END we call the function \textit{AgvStopMission(uAgv)} in order to stop the mission.
+When the mission is stopped, the micro terminate, and eventually other micros can start. When a micro terminate the execution of the function \textit{onExecuteMicro()} return true. \\
+
+\lstinputlisting[language=c++, firstline=217, lastline=277, caption=OnExecuteMicro, label=lbl:OnExecuteMicro]{listing/agvDropToPoint_v0.xs}

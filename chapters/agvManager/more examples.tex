@@ -1,0 +1,500 @@
+%----------------------------------------------------------------------------------------
+%	CHAPTER
+%----------------------------------------------------------------------------------------
+
+\chapterimage{chapter_head_2.pdf} % Chapter heading image
+
+\chapter{More examples}
+In this chapter we will present some data structure of AgvManager and some examples on agv scripting. In this chapter we will show only piece of code necessary to explain the concepts. Complete examples are provided with this document. The expamples package is divided by folders, every folder contain the script files. Mainly every example at least have 3 files: main.xs, common.xs and agvEventFunctions.xs. We will indicate in which file and function every piece of code can be found.
+
+In AgvManager documentation we can find functions and data structures divided by argument, it means functions to manage vehicles, maps, databases, etc. Refer to the official documentation in order to get a complete list of functions and data structures.
+
+An Agv usually transport a loading unit (UDC, LU) e.g. pallet, trolley, etc. , or a loading unit with a load on it e.g. a pallet with some mechanical parts on it.
+
+For the presence Loading unit we find the variable bPresenza or bPres.
+For the presense of a load on board of the Loading Unit (UDC) we find the variable bVasiPieni.
+
+\section{Xscript Agv Data structures}
+In the documentaion under the voice \textit{Estensione x-script per AgvManager » Funzioni per la gestione degli agv}, we can find some functions and data structures to manage AGVs. Here will present some data structures and functions that can operate on them.
+
+Note that AgvManager have internal data structures where to save informations about vehicles, maps, points, etc. When we need, for example to get information about agv number 4, we create a strucutre similar to the one AgvManager have and by calling a dedicated function we can get information on Agv 4.
+
+\subsection{XMapParams}
+This structures contains some fields to define the dimensions of an AGV and movement behavior. There are two functions that operate on this structure to get information from AgvManger and set information to it.
+For example, if we define a variable \textit{mPar} as: \textit{XMapParams mPar}, we can read parameter from AgvManager and store them into this structure by calling the function \textit{AgvGetMapParams(@mpar)}.
+If we need to modify some parameter we can we use the dot operator of the structure.
+To apply modification onto AgvManager we have to call the function \textit{AgvSetMapParams(@mpar)}, that transfer the data from the structure \textit{mPar} to AgvManager.
+
+Note the use of \textit{@} when passing the variable mPar to these 2 functions. The variable is passed by reference not by value.
+
+Meaning of the structure fields??????????
+
+\subsection{XVehicleInfo}
+This data structure contain information about the vehicle, for example alarm status, mission in progress, operating mode, capacity of battery, etc.
+To get information from AgvManager about the vehicle we can call the function \textit{AgvGetVehicleInfo(uint agvId, xvehicleinfo\& info)}, we pass to the function the index of the agv and an XVehicleInfo variable.
+
+For example if we need information about Agv number 4, we create the structure \textit{XVehicleInfo vInfo}, then we call \textit{AgvGetVehicleInfo(4, @vInfo)}.
+In this way, we can for example read the battery status \textit{vInfo.uBatteryCapacity}. Note that after a while the Agv is working, this value will be different from the value AgvManager have, we have to call again the function \textit{AgvGetVehicleInfo(,)} in order to update information.\\
+
+The field \textit{uint uStatus}, Vehicle Status Flag,  is an 32 bit unsigned integer where information are saved in a binary way. There are defined some constants (flags) in order to decode information:
+\begin{lstlisting}
+	// Vehicle status flags, bit mask 2^n.
+	// 4 least significant bits
+	
+	$define VST_POTENZA_ATTIVA   1 // Power active, mask bit 0
+	$define VST_EXEC_COMANDO     2 // executing command, mask bit 1
+	$define VST_CARICO_PRESENTE  8 // load present, mask bit 3
+	$define VST_CARICA_INCORSO   4 // charge in progress, mask bit 2
+\end{lstlisting}
+
+For example we need to know if the vehicle have a load on board, we can write:
+\textit{bLoadOnBoard = vInfo.uStatus  \&  VST\_CARICO\_PRESENTE}.
+
+The first 4 bits (from 0 to 3), are reserved to system vehicle status (status communicated by the vehicle to AgvManager).
+The user can define its own flag status beginning from bit 4, depending on the state of the vehicle and the plant requirements.\\
+
+\subsection{XSiteInfo}
+A data structure where information about user points can be stored.
+By calling \textit{agvGetSiteInfo(int userPointId, XSiteInfo\& sInfo)} we can get the user point informations from AgvManager. The function have as parameter the id or code of the user point and a reference of a XSiteInfo variable.
+The function return true if the user point exist.
+With the function \textit{agvSetSiteInfo(int userPointId, XSiteInfo\& sInfo)} we can set the parameter of a user point in AgvManager.\\
+
+For example the field \textit{bPresenza} is a boolean variable that indicate if the user point contain a load or not.
+
+When executing a loading operation into the vehicle (from station to vehicle), by calling the function \textit{AgvExecLoad(agv,userPoint)} the value of \textit{bPresenza} is set to false and the vehicle status flag, \textit{uStatus}, corresponding to VST\_CARICO\_PRESENTE is set to true.
+
+When executing an unload operation (from vehicle to the station), by calling \textit{AgvExecUnload(agv, userPoint)} the value of \textit{bPresenza} to true.\\
+
+Some fields can be read and write (rw) from the script others are read only (ro).
+
+bVasiPieni, is a variable that indicate the presence of a load on the UDC (Loading Unit).
+
+\section{Some useful functions}
+We already see some callback funtions like \textit{onApplicationStart(), onNextMission(), onExpandMacro(), onExecuteMicro()} and some utility functions like \textit{agvAddMacro(), agvAddWayPoint(), agvRegisterPassante(), agRegisterBloccante(), agvRegisterOperation()}. There are a lot of functions provided by AgvManager. We will some of them in the examples. We will see also how we can create our own functions and objects.
+
+\subsection{Movement functions}
+In the documentation we can find some functions, e.g. \textit{agvAddWayPoint(), agvMoveToWayPoint()}, to define the movement ways and methods as well as some constants. Constants related to this category of functions begin with "\textit{MoveResult\_}" or "\textit{EsitoMov\_}", some of these constants are self-explanatory, e.g. \textit{MoveResult\_WaypointReached, MoveResult\_CompletedMovement }.
+
+
+\subsection{MICRO registration functions}
+The following functions register a micro operation or instruction:\\
+
+\begin{enumerate}
+	\item agvRegisterPassante(,,,,) [P] command, Pass-through operation.\\
+	
+	\item agvRegisterSystemPassante(,,,,) MIC\_SYSTEM, system micro instruction.
+	\item agvRegisterSystemBloccante(,,,,) MIC\_SYSTEM, system micro instruction.\\
+	
+	\item agvReigsterOperation(,,,,) MIC\_OPERATION [O] Operation to send to the vehicle. The syntax of the command is: [Occccmmmm,type,p1,p2,p3,p4].\\
+	
+	\item agvRegisterWait(,,,,) [W] Wait condition operation.\\
+	
+	\item agvRegisterMovingOperation(,,,,) MIC\_MOVE [Q] Operation with movement.\\
+\end{enumerate}
+
+To get a list of all micro type search in the documentation the prefix "\textit{MIC\_}".
+
+\subsection{Points}
+
+\begin{itemize}
+	\item agvUserExists(uint uCode) : return true if a generic point, user point or cross exist.
+	\item siteExists(uint uCode) : return true if the USER point exists.
+	\item agvGetSiteInfo(uint userId, xSiteInfo \&sInfo): get information about USER point with id userId.\\
+\end{itemize}
+
+\begin{itemize}
+	\item SetIntProperty(uint, string, int)
+	\item IntProperty(uint, string)
+	\item addInProperty(,,,,)
+	\begin{lstlisting}
+	AddIntProperty(i, PROP_ASSIGNED_AGV, "Assigned agv", ACCESS_INST, XSitePropertyFlg_volatile)
+	\end{lstlisting}
+\end{itemize}	
+
+
+\section{Ex 01: Drag and drop example with loading and loading operations}
+
+In this example we will see how we can perform a drag and drop to a user point. A user point represent a working station, that could be machine or simply a position in a store. For example in an automatic store, a user point may represent the position where materials can be stoked or picked. A user point have a property called \textit{bPresenza} that indicate the presence of material in the position designated by the user point or its absence.\\
+
+\subsection*{OnAgvDroppedToPoint()}
+In the function \textit{OnAgvDroppedToPoint()}, after the verification of requirements, we will register 3 missions depending on the case if the point is a user poitn or generic point, if the agv have a load or the user point have a load. In listing \ref{lstDrag} the code and explanations are shown.
+
+The code that verify the conditions: vehicle exist, in automatic, not enabled, no mission in progress is not shown here. I can be find in the complete example.\\
+
+Listing \ref{lstDrag} can be found in the file \textit{agvEventFucntions.xs} in the callback function \textit{OnAgvDroppedToPoint()}.
+
+\begin{lstlisting}[language=c++, caption= Drag and drop to user point and generic point, label=lstDrag]
+	// note comments in Xscript begin with ;
+	
+	XSiteInfo sInfo // user point information strucutre
+	XVehicleInfo vInfo // vehicle strucutre information
+	
+	// if user point and vehicle exist
+	if (AgvGetSiteInfo(uUser, @sInfo) and AgvGetVehicleInfo(uAgv, @vInfo))
+	
+		bool loadOnAgv, loadOnUser
+		// read the bit corresponding to lpad present on agv
+		loadOnAgv = (vInfo.uStatus & VST_CARICO_PRESENTE)
+		
+		loadOnUser = sInfo.bPresenza
+		
+		//if both agv and user point have a load
+		if (loadOnAgv && loadOnUser)
+			MessageBox("Cannot move agv " + (uAgv + 1) + " to " + GetSiteName(uUser) + " : both have a trolley")
+			return
+		endif
+		
+		// if only agv have a load, the mission unload to user is registered
+		if (loadOnAgv && not loadOnUser)
+			// call to use defined function
+			RegisterMission(uAgv, MIS_UNLOAD_ONLY, uUser)
+			return
+		endif
+		
+		//if only user point have load, the mission load to agv is registerd.
+		if (loadOnUser && not loadOnAgv)
+			RegisterMission(uAgv, MIS_LOAD_ONLY, uUser)
+			return
+		endif
+		
+	endif
+	
+	// register movement to point, 
+	//if there is no lad neither on agv neither on user point, 
+	//or if the point is a generic point
+	RegisterMission(uAgv, MIS_TO_POINT, uUser)
+	
+\end{lstlisting}
+
+When the user drag and drop the vehicle onto a point, the callback function \textit{OnAgvDroppedToPoint()} is called, then the function \textit{RegisterMission()} is called inside it as we can in the listing \ref{lstDrag}.
+
+\subsection*{RegisterMission()}
+The function \textit{RegisterMission()} is a user defined function, with the goal to assign missions, can be found in \textit{common.xs}.
+
+The keyword \textit{forward} is used to define a prototype function, it tell the program that somewhere the function is implemented. if \textit{forward} is not used, and we implement for example a functionA before a fucntionB, and functionA call fucntionB, the program will give error, because he expect that fucntionB is implemented before functionA.
+
+The function have 4 input parameters: \textit{uAgv (agv code), uCode (mission id), iPar1 and iPar2}. Where in this case in \textit{iPar1} is passed the point id.
+
+Constants to identify missions and macros are defined as follow:\\
+
+\begin{lstlisting}
+	// Mission defition. Missions can begin from 0, 
+	//because there are no missions already defined in AgvManger
+	
+	// No mission in progress
+	$define MIS_NULL							0
+	
+	$define MIS_LOAD_ONLY						10
+	$define MIS_UNLOAD_ONLY						11
+	$define MIS_TO_POINT						14
+	
+	// MACRO definition, begin always from 100
+	// Movement to waypoint
+	$define MAC_MOVE_TO_WP					100
+	// Load from the point defined by par1
+	$define MAC_LOAD_TROLLEY				102
+	// Unload on the point defined by par1
+	$define MAC_UNLOAD_TROLLEY				103
+\end{lstlisting}
+
+In \textit{RegisterMission()} we will start a new mission and fill the \textit{macro list} with MACROs. We will use respectively \textit{agvStartMission()} and \textit{agvAddMacro()}.
+
+As you can notice, a mission is started by calling \textit{agvStartMission(uint agvId, uint missionId, string missionDescription)}. This function return true if a mission is in progress. We can define a new function that return a string value, to get the description of missions.
+After that we write a select case statement in order to fill the macro list depending on the mission code and to give movment instructions by calling the user defined function \textit{RegisterMovement()}.
+
+For example, if our mission is \textit{MIS\_LOAD\_ONLY}  we register a movement to the user point by calling \textit{RegisterMovement(agvId,userPointId)}, where we will add the macro \textit{MAC\_MOVE\_TO\_WP}, then we add the 2 macros : MAC\_LOAD\_TROLLEY and MAC\_END. So the macro list have 3 macros, table \ref{tab:macrolist}. This should be clear, the vehicle first move to the user point, once arrived, load the agv then finish executing the mission.
+
+\begin{table}[h]
+	\begin{tabular}{ | l | l | l  | l | l  | l |}
+		\hline
+		uAgv & MAC code           & iPar1           & iPar2           & iPar3 & iPar4 \\ \hline
+		1    & MAC\_MOVE\_TO\_WP  & Waypoint id     & concatenateNext &       &  \\ \hline
+		1    & MAC\_LOAD\_TROLLEY & User point code & bVasiPieni      &       &  \\ \hline
+		1    & MAC\_END           & MIS\_LOAD\_ONLY &                 &       &  \\ \hline
+	\end{tabular}
+	\caption{Macro list of the load mission, MIS\_LOAD\_ONLY. As you can see the paramters can assume different value types depending on the macro or micro}
+	\label{tab:macrolist}
+\end{table}
+
+The same reasoning can be applied for other missions. Following the a part of the code:
+
+\begin{lstlisting}[caption=RegisterMission() code fragment, label=lstRegisterMission]
+	// starting mission "uCode", with descrition "text"
+	if (not AgvStartMission(uAgv, uCode, text))
+		return MIS_NULL
+	end
+	// user point info strutcture
+	XSiteInfo sInfo
+	
+	//Fill the macro list with the macro for the selected mission
+	// when we call registerMission(), we pass as iPar1 the user point index
+	select (uCode)
+		// Loading agv mission
+		case MIS_LOAD_ONLY
+			if (not AgvGetSiteInfo(iPar1, @sInfo))
+				// Strange error. Should not happen!!!
+				AgvStopMission(uAgv)
+				return MIS_NULL
+			endif
+			// iPar1 = point in store where toilet must be taken
+			RegisterMovement(uAgv, iPar1)
+			// Take the trolley with the toilet
+			// Trolley with toilet
+			AgvAddMacro(uAgv, MAC_LOAD_TROLLEY, iPar1, sInfo.bVasiPieni)
+			// END of this mission
+			AgvAddMacro(uAgv, MAC_END, uCode)
+			break
+			
+		// unloading agv mission
+		case MIS_UNLOAD_ONLY
+			if (not AgvGetSiteInfo(iPar1, @sInfo))
+				// Strange error. Should not happen!!!
+				AgvStopMission(uAgv)
+				return MIS_NULL
+			endif
+			// iPar1 = point in store where toilet must be taken
+			RegisterMovement(uAgv, iPar1)
+			
+			// Leave the trolley with the toilet
+			// Trolley with toilet
+			AgvAddMacro(uAgv, MAC_UNLOAD_TROLLEY, iPar1, sInfo.bVasiPieni)
+			// END of this mission
+			AgvAddMacro(uAgv, MAC_END, uCode)
+			break
+		
+		// movement to a point mission
+		case MIS_TO_POINT
+			//Move to selected point
+			RegisterMovement(uAgv, iPar1)
+			//END of this mission
+			AgvAddMacro(uAgv, MAC_END, uCode)
+			break
+			
+		// mission not defined
+		default
+			MessageBox("Mission not implemented: " + uCode)
+			return MIS_NULL
+	end
+
+\end{lstlisting}
+
+The function \textit{RegisterMovement()} is self-explanatory.
+
+\begin{lstlisting}[caption=RegisterMovement() function,label=lstRegisterMovment]
+code RegisterMovement(uint uAgv, uint userId, uchar destOrientation = 'X',
+			bool concatenateNext = true
+			)
+	uint wpidx
+	//add waypoint, return an unique id of the added point.
+	wpidx = AgvAddWaypoint(uAgv, userId, destOrientation)
+	// add movement macro related to the point we get previously
+	AgvAddMacro(uAgv, MAC_MOVE_TO_WP, wpidx, concatenateNext)
+end
+\end{lstlisting}
+
+In this case mission are registered by calling the user defined function \textit{RegisterMission()}. This function was called by the function \textit{OnAgvDroppedToPoint()}. If we want to assign missions in anotherway, we can call the function \textit{RegisterMission()} inside the callback function \textit{onNextMission()} that is called when the agv is enabled.
+
+Independently on how a mission is registered, when a mission is started the callback fucntion \textit{onExpandMacro()} is called in order to begin the execution of macros and micors.
+
+
+\subsection*{onExpandMacro()}
+
+\textit{onExpandMacro()} is called when there are MACROs in the macro list, check the flowchart in the official documentation and in the previous chapter, in the section mission execution.
+
+To this callback function are passed the agv index, mission index, MACRO index, and 4 parameters. The agv index and mission index are passed from AgvManager to the function, that are related the the list to be expanded. Every mission have its own macro list. The parameters are read from the macro list.
+
+\begin{lstlisting}[caption=onExpandMacro(), label=lstonExpandMacro]
+code OnExpandMacro(uint uAgv, uint uMission, uint iMacroCode,
+		 int iPar1, int iPar2, int iPar3, int
+		 ) : bool
+		 
+	select (iMacroCode)
+		case MAC_MOVE_TO_WP
+			// iPar1 = Waypoint id
+			// iPar2 = (bool) do concatenate next macro
+			select (AgvMoveToWayPoint(uAgv, uMission, WpFl_RicalcolaPercorsi | WpFl_EliminaCompletato))
+				case MoveResult_CompletedMovement	; Completed movement
+				case MoveResult_WaypointReached		; Waypoint reached
+					if (iPar2)
+						AgvComputeNextMacro(uAgv)
+					endif
+					return true
+				default
+					return false
+			endselect
+			return true
+		
+		case MAC_LOAD_TROLLEY
+			// par1 is the point
+			// par2 is true if there is a toilet on the trolley
+			// par3 is true it the trolley is ready to be taken out of store
+			AgvRegisterOperation(uAgv, uMission, O_LOAD, iPar2, iPar3, 0, 0, iPar1)
+			break
+		
+		case MAC_UNLOAD_TROLLEY
+			// par1 is the point
+			AgvRegisterOperation(uAgv, uMission, O_UNLOAD, 0, 0, 0, 0, iPar1)
+			break
+		
+		case MAC_END
+			SetAgvMessage(uAgv, "")
+			AgvRegisterSystemBloccante(uAgv, uMission, S_END)
+			break
+		
+		default
+			qt_warning("Unknown macro: " + iMacroCode)
+			break
+	end
+	return TRUE
+end
+\end{lstlisting}
+
+Simply the macro load register on operation of type \textit{O\_LOAD}, the unload macro register the \textit{O\_UNLOAD} operation and the end macro register the system macro \textit{S\_END}. These three micros are already defined by AgvManager.
+Search in the official documentation the prefixes \textit{O\_} ad \textit{S\_} to find a complete list \underline{O}perations  and \underline{S}ystem micro type.\\
+
+The macro \textit{MAC\_MOVE\_TO\_WP} execute the movement command by calling \underline{AgvMoveToWayPoint(,,)} and register a \textit{MIC\_MOVE} micro type. When the movement is completed or the waypoint is reached the function return true, that mean the expansion of the macro has finished.
+
+After the expansion of macros, the micro are executed by calling the callback fucntion \textit{onExecuteMicro()}.
+
+\subsection*{OnExecuteMicro()}
+We see how micros are registered when macros are expanded. Now we see how micros are executed.
+The \textit{MAC\_LOAD\_TROLLEY} had registered an \textit{O\_LOAD} micro of type \textit{MIC\_OPERATION}.
+The \textit{MAC\_UNLOAD\_TROLLEY} had registered an \textit{O\_UNLOAD} micro of type \textit{MIC\_OPERATION} and the macro \textit{MAC\_END} had registered an \textit{S\_END} of type \textit{MIC\_SYSTEM}.
+
+\begin{lstlisting}
+case MIC_OPERATION
+	select (iPar0)
+		case O_LOAD
+			if (bLastCall)
+				MultiMessageState(uAgv, "Agv " + (uAgv + 1) + " : loaded from " + userId)
+				SetAgvMessage(uAgv, "")
+				// Agv has finished the load:
+				// AgvExecLoad() puts the logical content of the user point identified by userId
+				// on the agv, and removes from the user point.
+				// NOTE: the operation was sent to the agv in OnExpandMacro()
+				// expanding the macro MAC_LOAD_TROLLEY
+				AgvExecLoad(uAgv, userId)
+				return true
+			else
+				MultiMessageState(uAgv, "Agv " + (uAgv + 1) + " : loading from " + userId)
+				SetAgvMessage(uAgv, "Loading")
+				return false
+			endif
+			break
+	
+		case O_UNLOAD
+			if (bLastCall)
+				MultiMessageState(uAgv, "Agv " + (uAgv + 1) + " : unloaded to " + userId)
+				SetAgvMessage(uAgv, "")
+				AgvExecUnload(uAgv, userId)
+				return true
+			else
+				MultiMessageState(uAgv, "Agv " + (uAgv + 1) + " : unloading to " + userId)
+				SetAgvMessage(uAgv, "Unloading")
+				return false
+			endif
+			break
+		default
+			qt_warning("Unknown MIC_OPERATION : " + iPar0 + " (mission = " + iMission + ", par1 = " + iPar1 + ")")
+			break
+	end
+case MIC_SYSTEM
+	select (iPar0)
+		case S_NULL
+			// Micro of that type are generated by AgvManager, I am not intereseted on it.
+			break
+		case S_END
+			// End of mission
+			if (vInfo.uStatus & VST_EXEC_COMANDO)
+				MultiMessageState(uAgv, "Agv " + (uAgv + 1) + ": wait for agv commands finished")
+				return false
+			endif
+			MultiMessageState(uAgv, "Agv " + (uAgv + 1) + ": finished executing commands")
+			AgvStopMission(uAgv)
+			SetAgvMessage(uAgv, "")
+			break
+end
+	
+\end{lstlisting}
+
+In the case of \textit{O\_LOAD} and \textit{O\_UNLOAD}, AgvManager send associated commands to the vehicle. When the vehicle terminate the execution of the command associated to the micro, AgvManger call the callback function \textit{onExecuteMciro()} with the parameter \textit{bLastCall} is set to true. During the last call, when \textit{bLastCall=true} we can perform also a logical load or unload by calling respectively \textit{AgvExecLoad()} or \textit{AgvExecUnload()}.
+
+The case of \textit{S\_END}, the function \textit{AgvStopMission(uAgv)} is called in order to stop terminate the mission execution.
+
+The \textit{MIC\_MOVE} are handled by AgvManager not by the script. So is not necessary to write the case of micro movements.
+
+\section{Ex 02: Comple exaple}%Interaction with the plant}
+
+\subsection{Access level}
+Sometime in a plant to a worker is permitted to do some job, to maintainer other jobs and so. In AgvManager are defined 5 different levels of users, that correspond to 5 different constants:
+
+\begin{lstlisting}
+	$define ACCESS_USER1 0
+	$define ACCESS_USER2 1
+	$define ACCESS_USER3 2
+	$define ACCESS_INST  3 // Installer
+	$define ACCESS_NO_OP 4
+\end{lstlisting}
+
+The actual level can be read by calling the function \textit{ActualAccessLevel()}.
+
+\textit{SetAccessLevelForOperation(DefQual\_OpTrascinaAgvSuLinea, ACCESS\_INST)}.
+
+\subsection{Settings: XSettings}
+
+settings.ini file strucuture
+
+\subsection{Interaction with user: XForm}
+Qt creator
+
+\subsection{onUpdateIO()}
+Drag and drop is useful to test vehicle. Normally a vehicle have to respond to some commands and react under some conditions that come from the plant. AgvManager can read input and output from a plc or a database. The callback function \textit{onUpdateIO(,,)} is used to read input from a plc and write outputs to a plc.
+
+IO can be defined in AgvConfigurator, in the tab PLC we define the communication protocol and the number of DWord (uint 32bit) to be exchanged in input and output. In the tab I/O description we can assign names to digital inputs and outputs.
+In AgvManager, in the tab Input/Output [F5] we can see the list of IO, read the value and force inputs and outputs.
+
+The callback function \textit{onUpdateIO} is called at the beginning of the main loop cycle. In this function we can read inputs by calling the fucntion \textit{agvGetInputXXXX} and write outputs by calling \textit{agvSetOutputXXXX}.
+
+There are different get and set functions to read inputs and write outputs, it depend on what and how we read or write. For example, \textit{bool agvGetInput(uint offset)} read the bit that have index "\textit{offset}" and return a boolean value depending on the value of that bit. \textit{agvGetInputDWord(uint offset, uint\& val)} read the DWord at the index \textit{offset} and write the value in \textit{val}, note that \textit{val} is passed to the function by reference.
+
+Note that the first bit have $offset = 1$ not $0$. It is convenient to define some constants that represent IO signals. For example it the signal \textit{Unloading done}, e.g. a push button connected to input 7, i.e. byte 0 bit 7, we can define a constant like \textit{\$define INP\_UNLOADING\_DONE 7}, then call the function \textit{bool iUnloadDone= AgvGetInput(INP\_UNLOADING\_DONE)}. The same can be done for Outputs.
+
+\subsection{Semaphores}
+AgvGetSemaphoreRequestMask
+AgvSetGreenSemaphore
+
+\subsection{Agv status flag change : OnAgvStatusChange() }
+When the flag status of the vehicle \textit{(xVehicleInfo.uStatus)} change value, the callback function \textit{OnAgvStatusChange()} is called by AgvManager.
+
+The fucntion \textit{SetAgvStatusDescription(uAgv, int stId, string desc)}. We can set the description of the bit with index stId.
+If we want e.g. to change the descrition of the status bit VST\_CARICO\_PRESENTE we have to write: 
+\begin{lstlisting}
+	loadType = TYPE_EMPTY_TROLLEY
+	SetAgvStatusDescription(uAgv, -3, "<font color=" + colorName(AgvGetTYpeColor(TYPE_EMPTY_TROLLEY)) + ">Trolley on agv</font>")}
+	AgvSetAgvLoadInfo(uAgv, trolleyOnAgv, loadType, toiletOnTrolley)
+\end{lstlisting}
+
+In this example we change the description into "Trolley on agv", the string is HTML formatted string. This information is shown in the windows "Vehicle information".
+
+The function AgvSetAgvLoadInfo() set information about the Loading Unit (UDC, Unita Di Carico) on the vehicle, e.g. \textit{AgvSetAgvLoadInfo(uAgv, bpresenza, loadType, bVasiPieni)}, bPresenza will be bPalletOnAgv, bVasiPieni will be bPalletFull.
+
+\subsection{Agv Operating mode change: OnAgvModeChange()}
+When the vehicle operating mode \textit{(xVehicleInfo.uMode)} changed, AgvManager call the callback function \textit{OnAgvModeChange(uint uAgv, uint oldMode, uint newMode)}.
+
+By calling the function \textit{bool AgvInAutomatico(uAgv)} we get true if the Agv is in automatic mode, i.e. VM\_AUTOMATICO, or in manual emergency mode, i.e. VM\_MANU\_EMERG.
+
+Look for the prefix VM\_ or MOD\_ to get a list of operating modes, depending on the Agv navigation type.
+
+
+
+
+
+
+
+
+
+
+
+
+
+

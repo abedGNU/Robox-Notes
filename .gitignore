@@ -1,0 +1,10 @@
+*.ist
+*.aux
+*.bcf
+*.idx
+*.log
+*.ptc
+*.run.xml
+*.toc
+*.synctex.gz
+
