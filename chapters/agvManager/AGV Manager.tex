@@ -348,7 +348,17 @@ MICROs are instructions to the vehicle. MICROs are stored in a list, one MACRO c
 For example a MICRO can be registered by calling \textit{agvRegisterSystemBloccante()} or  \textit{agvRegisterSystemPassante()} for MIC\_SYSTEM type or \textit{AgvRegisterOperation()} for MIC\_OPERATION type. See documentation for a more complete list of micro registration functions.
 These function have uAgv, uMission, MICROcode as input parameters.
 
-There are different types of MICROs, that can be found in the documentation with prefix MIC\_. Let's see MIC\_SYSTEM to which the S\_END belong, this type of MICRO doesn't send any instruction to the agv itself. For example S\_END is need to end a mission, and is managed by AgvManager.
+There are different types of MICROs, that can be found in the documentation with prefix MIC\_. Let's see MIC\_SYSTEM to which the S\_END belong, this type of MICRO doesn't send any instruction to the agv itself. For example S\_END is need to end a mission, and is managed by AgvManager.\\
+
+For example listing.\ref{lstRegisterSystem}, register a 30 seconds waiting time.
+
+\begin{lstlisting}[caption=Wait time system micro ,label=lstRegisterSystem]
+	$define S_START_WAIT				100
+	$define S_EXEC_WAIT					101
+	AgvRegisterSystemBloccante(uAgv, uMission, S_START_WAIT, iPar1)
+	AgvRegisterSystemBloccante(uAgv, uMission, S_EXEC_WAIT)
+\end{lstlisting}
+	
 
 A MIC\_MOVE type is related to instruction of motion sent to the agv. A MIC\_OPERATION is an operation like loading and unloading. \\
 

@@ -15,28 +15,28 @@ For the presence Loading unit we find the variable bPresenza or bPres.
 For the presense of a load on board of the Loading Unit (UDC) we find the variable bVasiPieni.
 
 \section{Xscript Agv Data structures}
-In the documentaion under the voice \textit{Estensione x-script per AgvManager » Funzioni per la gestione degli agv}, we can find some functions and data structures to manage AGVs. Here will present some data structures and functions that can operate on them.
+In the documentation under the voice \textcolor{blue}{Estensione x-script per AgvManager » Funzioni per la gestione degli agv}, we can find some functions and data structures to manage AGVs. Here will present some data structures and functions that can operate on them.
 
 Note that AgvManager have internal data structures where to save informations about vehicles, maps, points, etc. When we need, for example to get information about agv number 4, we create a strucutre similar to the one AgvManager have and by calling a dedicated function we can get information on Agv 4.
 
 \subsection{XMapParams}
 This structures contains some fields to define the dimensions of an AGV and movement behavior. There are two functions that operate on this structure to get information from AgvManger and set information to it.
-For example, if we define a variable \textit{mPar} as: \textit{XMapParams mPar}, we can read parameter from AgvManager and store them into this structure by calling the function \textit{AgvGetMapParams(@mpar)}.
+For example, if we define a variable \textcolor{blue}{mPar} as: \textcolor{blue}{XMapParams mPar}, we can read parameter from AgvManager and store them into this structure by calling the function \textcolor{blue}{AgvGetMapParams(@mpar)}.
 If we need to modify some parameter we can we use the dot operator of the structure.
-To apply modification onto AgvManager we have to call the function \textit{AgvSetMapParams(@mpar)}, that transfer the data from the structure \textit{mPar} to AgvManager.
+To apply modification onto AgvManager we have to call the function \textcolor{blue}{AgvSetMapParams(@mpar)}, that transfer the data from the structure \textcolor{blue}{mPar} to AgvManager.
 
-Note the use of \textit{@} when passing the variable mPar to these 2 functions. The variable is passed by reference not by value.
+Note the use of \textcolor{blue}{@} when passing the variable mPar to these 2 functions. The variable is passed by reference not by value.
 
 Meaning of the structure fields??????????
 
 \subsection{XVehicleInfo}
 This data structure contain information about the vehicle, for example alarm status, mission in progress, operating mode, capacity of battery, etc.
-To get information from AgvManager about the vehicle we can call the function \textit{AgvGetVehicleInfo(uint agvId, xvehicleinfo\& info)}, we pass to the function the index of the agv and an XVehicleInfo variable.
+To get information from AgvManager about the vehicle we can call the function \textcolor{blue}{AgvGetVehicleInfo(uint agvId, xvehicleinfo\& info)}, we pass to the function the index of the agv and an XVehicleInfo variable.
 
-For example if we need information about Agv number 4, we create the structure \textit{XVehicleInfo vInfo}, then we call \textit{AgvGetVehicleInfo(4, @vInfo)}.
-In this way, we can for example read the battery status \textit{vInfo.uBatteryCapacity}. Note that after a while the Agv is working, this value will be different from the value AgvManager have, we have to call again the function \textit{AgvGetVehicleInfo(,)} in order to update information.\\
+For example if we need information about Agv number 4, we create the structure \textcolor{blue}{XVehicleInfo vInfo}, then we call \textcolor{blue}{AgvGetVehicleInfo(4, @vInfo)}.
+In this way, we can for example read the battery status \textcolor{blue}{vInfo.uBatteryCapacity}. Note that after a while the Agv is working, this value will be different from the value AgvManager have, we have to call again the function \textcolor{blue}{AgvGetVehicleInfo(,)} in order to update information.\\
 
-The field \textit{uint uStatus}, Vehicle Status Flag,  is an 32 bit unsigned integer where information are saved in a binary way. There are defined some constants (flags) in order to decode information:
+The field \textcolor{blue}{uint uStatus}, Vehicle Status Flag,  is an 32 bit unsigned integer where information are saved in a binary way. There are defined some constants (flags) in order to decode information:
 \begin{lstlisting}
 	// Vehicle status flags, bit mask 2^n.
 	// 4 least significant bits
@@ -48,33 +48,33 @@ The field \textit{uint uStatus}, Vehicle Status Flag,  is an 32 bit unsigned int
 \end{lstlisting}
 
 For example we need to know if the vehicle have a load on board, we can write:
-\textit{bLoadOnBoard = vInfo.uStatus  \&  VST\_CARICO\_PRESENTE}.
+\textcolor{blue}{bLoadOnBoard = vInfo.uStatus  \&  VST\_CARICO\_PRESENTE}.
 
 The first 4 bits (from 0 to 3), are reserved to system vehicle status (status communicated by the vehicle to AgvManager).
 The user can define its own flag status beginning from bit 4, depending on the state of the vehicle and the plant requirements.\\
 
 \subsection{XSiteInfo}
 A data structure where information about user points can be stored.
-By calling \textit{agvGetSiteInfo(int userPointId, XSiteInfo\& sInfo)} we can get the user point informations from AgvManager. The function have as parameter the id or code of the user point and a reference of a XSiteInfo variable.
+By calling \textcolor{blue}{agvGetSiteInfo(int userPointId, XSiteInfo\& sInfo)} we can get the user point informations from AgvManager. The function have as parameter the id or code of the user point and a reference of a \textcolor{blue}{XSiteInfo} variable.
 The function return true if the user point exist.
-With the function \textit{agvSetSiteInfo(int userPointId, XSiteInfo\& sInfo)} we can set the parameter of a user point in AgvManager.\\
+With the function \textcolor{blue}{agvSetSiteInfo(int userPointId, XSiteInfo\& sInfo)} we can set the parameter of a user point in AgvManager.\\
 
-For example the field \textit{bPresenza} is a boolean variable that indicate if the user point contain a load or not.
+For example the field \textcolor{blue}{bPresenza} is a boolean variable that indicate if the user point contain a load or not.
 
-When executing a loading operation into the vehicle (from station to vehicle), by calling the function \textit{AgvExecLoad(agv,userPoint)} the value of \textit{bPresenza} is set to false and the vehicle status flag, \textit{uStatus}, corresponding to VST\_CARICO\_PRESENTE is set to true.
+When executing a loading operation into the vehicle (from station to vehicle), by calling the function \textcolor{blue}{AgvExecLoad(agv,userPoint)} the value of \textcolor{blue}{bPresenza} is set to false and the vehicle status flag, \textcolor{blue}{uStatus}, corresponding to \textcolor{blue}{VST\_CARICO\_PRESENTE} is set to true.
 
-When executing an unload operation (from vehicle to the station), by calling \textit{AgvExecUnload(agv, userPoint)} the value of \textit{bPresenza} to true.\\
+When executing an unload operation (from vehicle to the station), by calling {AgvExecUnload(agv, userPoint)} the value of {bPresenza} to true.\\
 
-Some fields can be read and write (rw) from the script others are read only (ro).
+Some fields can be read and write \textcolor{blue}{(rw)} from the script others are read only \textcolor{blue}{(ro)}.
 
-bVasiPieni, is a variable that indicate the presence of a load on the UDC (Loading Unit).
+\textcolor{blue}{bVasiPieni} is a variable that indicate the presence of a load on the UDC (Loading Unit).
 
 \section{Some useful functions}
-We already see some callback funtions like \textit{onApplicationStart(), onNextMission(), onExpandMacro(), onExecuteMicro()} and some utility functions like \textit{agvAddMacro(), agvAddWayPoint(), agvRegisterPassante(), agRegisterBloccante(), agvRegisterOperation()}. There are a lot of functions provided by AgvManager. We will some of them in the examples. We will see also how we can create our own functions and objects.
+We already see some callback funtions like \textcolor{blue}{onApplicationStart(), onNextMission(), onExpandMacro(), onExecuteMicro()} and some utility functions like \textcolor{blue}{agvAddMacro(), agvAddWayPoint(), agvRegisterPassante(), agRegisterBloccante(), agvRegisterOperation()}. There are a lot of functions provided by AgvManager. We will some of them in the examples. We will see also how we can create our own functions and objects.
 
 \subsection{Movement functions}
-In the documentation we can find some functions, e.g. \textit{agvAddWayPoint(), agvMoveToWayPoint(), AgvRegisterMoveTo()}, to define the movement ways and methods as well as some constants.
-Constants related to this category of functions begin with "\textit{MoveResult\_}" or "\textit{EsitoMov\_}", some of these constants are self-explanatory, e.g. \textit{MoveResult\_WaypointReached, MoveResult\_CompletedMovement }.
+In the documentation we can find some functions, e.g. \textcolor{blue}{agvAddWayPoint(), agvMoveToWayPoint(), AgvRegisterMoveTo()}, to define the movement ways and methods as well as some constants.
+Constants related to this category of functions begin with \textcolor{blue}{MoveResult\_} or \textcolor{blue}{EsitoMov\_}, some of these constants are self-explanatory, e.g. \textcolor{blue}{MoveResult\_WaypointReached, MoveResult\_CompletedMovement }.
 
 more...........
 \begin{itemize}
@@ -98,14 +98,16 @@ The following functions register a micro operation or instruction:\\
 	\item agvRegisterMovingOperation(,,,,) MIC\_MOVE [Q] Operation with movement.\\
 \end{enumerate}
 
-To get a list of all micro type search in the documentation the prefix "\textit{MIC\_}".
+To get a list of all micro type search in the documentation the prefix "{MIC\_}".
 
 \subsection{Points}
 
 \begin{itemize}
 	\item agvUserExists(uint uCode) : return true if a generic point, user point or cross exist.
 	\item siteExists(uint uCode) : return true if the USER point exists.
-	\item agvGetSiteInfo(uint userId, xSiteInfo \&sInfo): get information about USER point with id userId.\\
+	\item agvGetSiteInfo(uint userId, xSiteInfo \&sInfo): get information about USER point with id userId.
+	\item SetSiteText(uint userId, string text) : set a text to shown on the user point on the map. e.g. SetSiteText(userId, "(" + row + ", " + col + ")").
+	\item SetSiteName(uint userId, string text) : set the name of the site, visible in the tooltip\\
 \end{itemize}
 
 \begin{itemize}
@@ -119,14 +121,14 @@ To get a list of all micro type search in the documentation the prefix "\textit{
 
 \section{Ex 01: Drag and drop example with loading and loading operations}
 
-In this example we will see how we can perform a drag and drop to a user point. A user point represent a working station, that could be machine or simply a position in a store. For example in an automatic store, a user point may represent the position where materials can be stoked or picked. A user point have a property called \textit{bPresenza} that indicate the presence of material in the position designated by the user point or its absence.\\
+In this example we will see how we can perform a drag and drop to a user point. A user point represent a working station, that could be machine or simply a position in a store. For example in an automatic store, a user point may represent the position where materials can be stoked or picked. A user point have a property called \textcolor{blue}{bPresenza} that indicate the presence of material in the position designated by the user point or its absence.\\
 
 \subsection*{OnAgvDroppedToPoint()}
-In the function \textit{OnAgvDroppedToPoint()}, after the verification of requirements, we will register 3 missions depending on the case if the point is a user poitn or generic point, if the agv have a load or the user point have a load. In listing \ref{lstDrag} the code and explanations are shown.
+In the function \textcolor{blue}{OnAgvDroppedToPoint()}, after the verification of requirements, we will register 3 missions depending on the case if the point is a user point or generic point, if the agv have a load or the user point have a load. In listing \ref{lstDrag} the code and explanations are shown.
 
 The code that verify the conditions: vehicle exist, in automatic, not enabled, no mission in progress is not shown here. I can be find in the complete example.\\
 
-Listing \ref{lstDrag} can be found in the file \textit{agvEventFucntions.xs} in the callback function \textit{OnAgvDroppedToPoint()}.
+Listing \ref{lstDrag} can be found in the file \textcolor{blue}{agvEventFucntions.xs} in the callback function \textcolor{blue}{OnAgvDroppedToPoint()}.
 
 \begin{lstlisting}[language=c++, caption= Drag and drop to user point and generic point, label=lstDrag]
 	// note comments in Xscript begin with ;
@@ -171,14 +173,14 @@ Listing \ref{lstDrag} can be found in the file \textit{agvEventFucntions.xs} in 
 	
 \end{lstlisting}
 
-When the user drag and drop the vehicle onto a point, the callback function \textit{OnAgvDroppedToPoint()} is called, then the function \textit{RegisterMission()} is called inside it as we can in the listing \ref{lstDrag}.
+When the user drag and drop the vehicle onto a point, the callback function {OnAgvDroppedToPoint()} is called, then the function \textcolor{blue}{RegisterMission()} is called inside it as we can in the listing \ref{lstDrag}.
 
 \subsection*{RegisterMission()}
-The function \textit{RegisterMission()} is a user defined function, with the goal to assign missions, can be found in \textit{common.xs}.
+The function \textcolor{blue}{RegisterMission()} is a user defined function, with the goal to assign missions, can be found in \textcolor{blue}{common.xs}.
 
-The keyword \textit{forward} is used to define a prototype function, it tell the program that somewhere the function is implemented. if \textit{forward} is not used, and we implement for example a functionA before a fucntionB, and functionA call fucntionB, the program will give error, because he expect that fucntionB is implemented before functionA.
+The keyword \textcolor{blue}{forward} is used to define a prototype function, it tell the program that somewhere the function is implemented. if {forward} is not used, and we implement for example a functionA before a fucntionB, and functionA call fucntionB, the program will give error, because he expect that fucntionB is implemented before functionA.
 
-The function have 4 input parameters: \textit{uAgv (agv code), uCode (mission id), iPar1 and iPar2}. Where in this case in \textit{iPar1} is passed the point id.
+The function have 4 input parameters: \textcolor{blue}{uAgv (agv code), uCode (mission id), iPar1 and iPar2}. Where in this case in \textcolor{blue}{iPar1} is passed the point id.
 
 Constants to identify missions and macros are defined as follow:\\
 
@@ -202,12 +204,12 @@ Constants to identify missions and macros are defined as follow:\\
 	$define MAC_UNLOAD_TROLLEY				103
 \end{lstlisting}
 
-In \textit{RegisterMission()} we will start a new mission and fill the \textit{macro list} with MACROs. We will use respectively \textit{agvStartMission()} and \textit{agvAddMacro()}.
+In \textcolor{blue}{RegisterMission()} we will start a new mission and fill the \textcolor{blue}{macro list} with MACROs. We will use respectively \textcolor{blue}{agvStartMission()} and \textcolor{blue}{agvAddMacro()}.
 
-As you can notice, a mission is started by calling \textit{agvStartMission(uint agvId, uint missionId, string missionDescription)}. This function return true if a mission is in progress. We can define a new function that return a string value, to get the description of missions.
-After that we write a select case statement in order to fill the macro list depending on the mission code and to give movment instructions by calling the user defined function \textit{RegisterMovement()}.
+As you can notice, a mission is started by calling \textcolor{blue}{agvStartMission(uint agvId, uint missionId, string missionDescription)}. This function return true if a mission is in progress. We can define a new function that return a string value, to get the description of missions.
+After that we write a select case statement in order to fill the macro list depending on the mission code and to give movement instructions by calling the user defined function \textcolor{blue}{RegisterMovement()}.
 
-For example, if our mission is \textit{MIS\_LOAD\_ONLY}  we register a movement to the user point by calling \textit{RegisterMovement(agvId,userPointId)}, where we will add the macro \textit{MAC\_MOVE\_TO\_WP}, then we add the 2 macros : MAC\_LOAD\_TROLLEY and MAC\_END. So the macro list have 3 macros, table \ref{tab:macrolist}. This should be clear, the vehicle first move to the user point, once arrived, load the agv then finish executing the mission.
+For example, if our mission is \textcolor{blue}{MIS\_LOAD\_ONLY}  we register a movement to the user point by calling \textcolor{blue}{RegisterMovement(agvId,userPointId)}, where we will add the macro \textcolor{blue}{MAC\_MOVE\_TO\_WP}, then we add the 2 macros : MAC\_LOAD\_TROLLEY and MAC\_END. So the macro list have 3 macros, table \ref{tab:macrolist}. This should be clear, the vehicle first move to the user point, once arrived, load the agv then finish executing the mission.
 
 \begin{table}[h]
 	\begin{tabular}{ | l | l | l  | l | l  | l |}
@@ -283,7 +285,7 @@ The same reasoning can be applied for other missions. Following the a part of th
 
 \end{lstlisting}
 
-The function \textit{RegisterMovement()} is self-explanatory.
+The function \textcolor{blue}{RegisterMovement()} is self-explanatory.
 
 \begin{lstlisting}[caption=RegisterMovement() function,label=lstRegisterMovment]
 code RegisterMovement(uint uAgv, uint userId, uchar destOrientation = 'X',
@@ -297,14 +299,14 @@ code RegisterMovement(uint uAgv, uint userId, uchar destOrientation = 'X',
 end
 \end{lstlisting}
 
-In this case mission are registered by calling the user defined function \textit{RegisterMission()}. This function was called by the function \textit{OnAgvDroppedToPoint()}. If we want to assign missions in anotherway, we can call the function \textit{RegisterMission()} inside the callback function \textit{onNextMission()} that is called when the agv is enabled.
+In this case mission are registered by calling the user defined function \textcolor{blue}{RegisterMission()}. This function was called by the function \textcolor{blue}{OnAgvDroppedToPoint()}. If we want to assign missions in another way, we can call the function \textcolor{blue}{RegisterMission()} inside the callback function \textcolor{blue}{onNextMission()} that is called when the agv is enabled.
 
-Independently on how a mission is registered, when a mission is started the callback fucntion \textit{onExpandMacro()} is called in order to begin the execution of macros and micors.
+Independently on how a mission is registered, when a mission is started the callback function \textcolor{blue}{onExpandMacro()} is called in order to begin the execution of macros and micors.
 
 
 \subsection*{onExpandMacro()}
 
-\textit{onExpandMacro()} is called when there are MACROs in the macro list, check the flowchart in the official documentation and in the previous chapter, in the section mission execution.
+\textcolor{blue}{onExpandMacro()} is called when there are MACROs in the macro list, check the flowchart in the official documentation and in the previous chapter, in the section mission execution.
 
 To this callback function are passed the agv index, mission index, MACRO index, and 4 parameters. The agv index and mission index are passed from AgvManager to the function, that are related the the list to be expanded. Every mission have its own macro list. The parameters are read from the macro list.
 
@@ -354,17 +356,17 @@ code OnExpandMacro(uint uAgv, uint uMission, uint iMacroCode,
 end
 \end{lstlisting}
 
-Simply the macro load register on operation of type \textit{O\_LOAD}, the unload macro register the \textit{O\_UNLOAD} operation and the end macro register the system macro \textit{S\_END}. These three micros are already defined by AgvManager.
-Search in the official documentation the prefixes \textit{O\_} ad \textit{S\_} to find a complete list \underline{O}perations  and \underline{S}ystem micro type.\\
+Simply the macro load register on operation of type \textcolor{blue}{O\_LOAD}, the unload macro register the {O\_UNLOAD} operation and the end macro register the system macro \textcolor{blue}{S\_END}. These three micros are already defined by AgvManager.
+Search in the official documentation the prefixes \textcolor{blue}{O\_} ad \textcolor{blue}{S\_} to find a complete list \underline{O}perations  and \underline{S}ystem micro type.\\
 
-The macro \textit{MAC\_MOVE\_TO\_WP} execute the movement command by calling \underline{AgvMoveToWayPoint(,,)} and register a \textit{MIC\_MOVE} micro type. When the movement is completed or the waypoint is reached the function return true, that mean the expansion of the macro has finished.
+The macro \textcolor{blue}{MAC\_MOVE\_TO\_WP} execute the movement command by calling \textcolor{blue}{AgvMoveToWayPoint(,,)} and register a \textcolor{blue}{MIC\_MOVE} micro type. When the movement is completed or the waypoint is reached the function return true, that mean the expansion of the macro has finished.
 
-After the expansion of macros, the micro are executed by calling the callback fucntion \textit{onExecuteMicro()}.
+After the expansion of macros, the micro are executed by calling the callback fucntion \textcolor{blue}{onExecuteMicro()}.
 
 \subsection*{OnExecuteMicro()}
 We see how micros are registered when macros are expanded. Now we see how micros are executed.
-The \textit{MAC\_LOAD\_TROLLEY} had registered an \textit{O\_LOAD} micro of type \textit{MIC\_OPERATION}.
-The \textit{MAC\_UNLOAD\_TROLLEY} had registered an \textit{O\_UNLOAD} micro of type \textit{MIC\_OPERATION} and the macro \textit{MAC\_END} had registered an \textit{S\_END} of type \textit{MIC\_SYSTEM}.
+The \textcolor{blue}{MAC\_LOAD\_TROLLEY} had registered an \textcolor{blue}{O\_LOAD} micro of type \textcolor{blue}{MIC\_OPERATION}.
+The \textcolor{blue}{MAC\_UNLOAD\_TROLLEY} had registered an \textcolor{blue}{O\_UNLOAD} micro of type \textcolor{blue}{MIC\_OPERATION} and the macro \textcolor{blue}{MAC\_END} had registered an \textcolor{blue}{S\_END} of type \textcolor{blue}{MIC\_SYSTEM}.
 
 \begin{lstlisting}
 case MIC_OPERATION
@@ -422,11 +424,11 @@ end
 	
 \end{lstlisting}
 
-In the case of \textit{O\_LOAD} and \textit{O\_UNLOAD}, AgvManager send associated commands to the vehicle. When the vehicle terminate the execution of the command associated to the micro, AgvManger call the callback function \textit{onExecuteMciro()} with the parameter \textit{bLastCall} is set to true. During the last call, when \textit{bLastCall=true} we can perform also a logical load or unload by calling respectively \textit{AgvExecLoad()} or \textit{AgvExecUnload()}.
+In the case of \textcolor{blue}{O\_LOAD} and \textcolor{blue}{O\_UNLOAD}, AgvManager send associated commands to the vehicle. When the vehicle terminate the execution of the command associated to the micro, AgvManger call the callback function \textcolor{blue}{onExecuteMciro()} with the parameter \textcolor{blue}{bLastCall} is set to true. During the last call, when \textcolor{blue}{bLastCall=true} we can perform also a logical load or unload by calling respectively \textcolor{blue}{AgvExecLoad()} or \textcolor{blue}{AgvExecUnload()}.
 
-The case of \textit{S\_END}, the function \textit{AgvStopMission(uAgv)} is called in order to stop terminate the mission execution.
+The case of \textcolor{blue}{S\_END}, the function \textcolor{blue}{AgvStopMission(uAgv)} is called in order to stop terminate the mission execution.
 
-The \textit{MIC\_MOVE} are handled by AgvManager not by the script. So is not necessary to write the case of micro movements.
+The \textcolor{blue}{MIC\_MOVE} are handled by AgvManager not by the script. So is not necessary to write the case of micro movements.
 
 \section{Ex 02: Comple exaple}%Interaction with the plant}
 
@@ -441,9 +443,9 @@ Sometime in a plant to a worker is permitted to do some job, to maintainer other
 	$define ACCESS_NO_OP 4
 \end{lstlisting}
 
-The actual level can be read by calling the function \textit{ActualAccessLevel()}.
+The actual level can be read by calling the function \textcolor{blue}{ActualAccessLevel()}.
 
-\textit{SetAccessLevelForOperation(DefQual\_OpTrascinaAgvSuLinea, ACCESS\_INST)}.
+\textcolor{blue}{SetAccessLevelForOperation(DefQual\_OpTrascinaAgvSuLinea, ACCESS\_INST)}.
 
 \subsection{Settings: XSettings}
 
@@ -453,26 +455,26 @@ settings.ini file strucuture
 Qt creator
 
 \subsection{onUpdateIO()}
-Drag and drop is useful to test vehicle. Normally a vehicle have to respond to some commands and react under some conditions that come from the plant. AgvManager can read input and output from a plc or a database. The callback function \textit{onUpdateIO(,,)} is used to read input from a plc and write outputs to a plc.
+Drag and drop is useful to test vehicle. Normally a vehicle have to respond to some commands and react under some conditions that come from the plant. AgvManager can read input and output from a plc or a database. The callback function \textcolor{blue}{onUpdateIO(,,)} is used to read input from a plc and write outputs to a plc.
 
 IO can be defined in AgvConfigurator, in the tab PLC we define the communication protocol and the number of DWord (uint 32bit) to be exchanged in input and output. In the tab I/O description we can assign names to digital inputs and outputs.
 In AgvManager, in the tab Input/Output [F5] we can see the list of IO, read the value and force inputs and outputs.
 
-The callback function \textit{onUpdateIO} is called at the beginning of the main loop cycle. In this function we can read inputs by calling the fucntion \textit{agvGetInputXXXX} and write outputs by calling \textit{agvSetOutputXXXX}.
+The callback function \textcolor{blue}{onUpdateIO} is called at the beginning of the main loop cycle. In this function we can read inputs by calling the fucntion \textcolor{blue}{agvGetInputXXXX} and write outputs by calling \textcolor{blue}{agvSetOutputXXXX}.
 
-There are different get and set functions to read inputs and write outputs, it depend on what and how we read or write. For example, \textit{bool agvGetInput(uint offset)} read the bit that have index "\textit{offset}" and return a boolean value depending on the value of that bit. \textit{agvGetInputDWord(uint offset, uint\& val)} read the DWord at the index \textit{offset} and write the value in \textit{val}, note that \textit{val} is passed to the function by reference.
+There are different get and set functions to read inputs and write outputs, it depend on what and how we read or write. For example, \textcolor{blue}{bool agvGetInput(uint offset)} read the bit that have index "\textcolor{blue}{offset}" and return a boolean value depending on the value of that bit. \textcolor{blue}{agvGetInputDWord(uint offset, uint\& val)} read the DWord at the index \textcolor{blue}{offset} and write the value in \textcolor{blue}{val}, note that \textcolor{blue}{val} is passed to the function by reference.
 
-Note that the first bit have $offset = 1$ not $0$. It is convenient to define some constants that represent IO signals. For example it the signal \textit{Unloading done}, e.g. a push button connected to input 7, i.e. byte 0 bit 7, we can define a constant like \textit{\$define INP\_UNLOADING\_DONE 7}, then call the function \textit{bool iUnloadDone= AgvGetInput(INP\_UNLOADING\_DONE)}. The same can be done for Outputs.
+Note that the first bit have $offset = 1$ not $0$. It is convenient to define some constants that represent IO signals. For example it the signal \textcolor{blue}{Unloading done}, e.g. a push button connected to input 7, i.e. byte 0 bit 7, we can define a constant like \textcolor{blue}{\$define INP\_UNLOADING\_DONE 7}, then call the function \textcolor{blue}{bool iUnloadDone= AgvGetInput(INP\_UNLOADING\_DONE)}. The same can be done for Outputs.
 
 \subsection{Semaphores}
 AgvGetSemaphoreRequestMask
 AgvSetGreenSemaphore
 
 \subsection{Agv status flag change : OnAgvStatusChange() }
-When the flag status of the vehicle \textit{(xVehicleInfo.uStatus)} change value, the callback function \textit{OnAgvStatusChange()} is called by AgvManager.
+When the flag status of the vehicle \textcolor{blue}{(xVehicleInfo.uStatus)} change value, the callback function \textcolor{blue}{OnAgvStatusChange()} is called by AgvManager.
 
-The fucntion \textit{SetAgvStatusDescription(uAgv, int stId, string desc)}. We can set the description of the bit with index stId.
-If we want e.g. to change the descrition of the status bit VST\_CARICO\_PRESENTE we have to write: 
+The fucntion \textcolor{blue}{SetAgvStatusDescription(uAgv, int stId, string desc)}. We can set the description of the bit with index stId.
+If we want e.g. to change the descrition of the status bit \textcolor{blue}{VST\_CARICO\_PRESENTE} we have to write: 
 \begin{lstlisting}
 	loadType = TYPE_EMPTY_TROLLEY
 	SetAgvStatusDescription(uAgv, -3, "<font color=" + colorName(AgvGetTYpeColor(TYPE_EMPTY_TROLLEY)) + ">Trolley on agv</font>")}
@@ -481,14 +483,14 @@ If we want e.g. to change the descrition of the status bit VST\_CARICO\_PRESENTE
 
 In this example we change the description into "Trolley on agv", the string is HTML formatted string. This information is shown in the windows "Vehicle information".
 
-The function AgvSetAgvLoadInfo() set information about the Loading Unit (UDC, Unita Di Carico) on the vehicle, e.g. \textit{AgvSetAgvLoadInfo(uAgv, bpresenza, loadType, bVasiPieni)}, bPresenza will be bPalletOnAgv, bVasiPieni will be bPalletFull.
+The function \textcolor{blue}{AgvSetAgvLoadInfo()} set information about the Loading Unit (UDC, Unita Di Carico) on the vehicle, e.g. \textcolor{blue}{AgvSetAgvLoadInfo(uAgv, bpresenza, loadType, bVasiPieni)}, bPresenza will be bPalletOnAgv, bVasiPieni will be bPalletFull.
 
 \subsection{Agv Operating mode change: OnAgvModeChange()}
-When the vehicle operating mode \textit{(xVehicleInfo.uMode)} changed, AgvManager call the callback function \textit{OnAgvModeChange(uint uAgv, uint oldMode, uint newMode)}.
+When the vehicle operating mode \textcolor{blue}{(xVehicleInfo.uMode)} changed, AgvManager call the callback function \textcolor{blue}{OnAgvModeChange(uint uAgv, uint oldMode, uint newMode)}.
 
-By calling the function \textit{bool AgvInAutomatico(uAgv)} we get true if the Agv is in automatic mode, i.e. VM\_AUTOMATICO, or in manual emergency mode, i.e. VM\_MANU\_EMERG.
+By calling the function \textcolor{blue}{bool AgvInAutomatico(uAgv)} we get true if the Agv is in automatic mode, i.e. \textcolor{blue}{VM\_AUTOMATICO}, or in manual emergency mode, i.e. \textcolor{blue}{VM\_MANU\_EMERG}.
 
-Look for the prefix VM\_ or MOD\_ to get a list of operating modes, depending on the Agv navigation type.
+Look for the prefix \textcolor{blue}{VM\_} or \textcolor{blue}{MOD\_} to get a list of operating modes, depending on the Agv navigation type.
 
 
 
