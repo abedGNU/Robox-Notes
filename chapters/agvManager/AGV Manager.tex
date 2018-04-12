@@ -44,10 +44,79 @@ Project folder should be placed in the the AgvManager folder, otherwise it will 
 	\label{fig:refConfigAgv}
 \end{figure}
 
+\section{AgvManager interface}
+AgvManager have one menu bar, one tool bar, one status bar, map visualization and different tabs [Fx].
+
+In the tool bar, fig.\ref{fig:toolbar}, we can find the button: Vehicle status, Commands insertion, Access level, color type, Zoom, Agv emulation, user define forms.
+
+In the status bar we can see some message from the script, date and time, and current access level.
+
+\begin{figure}
+	\centering\includegraphics[scale=0.5]{agvmanager/agvManager/toolbar}
+	\caption{AgvManager tool bar }
+	\label{fig:toolbar}
+\end{figure}
+
+\subsection{AGV emulation}
+If the flag \textit{emuagv.dll emulazione agv} in AgvConfigurator, we can emulate the AGV in AgvManager. The windows of the emulation can be opened via the button \textit{Controllo emulazione agv}.\\
+
+The window in fig.\ref{fig:refAgvEmu} shows the status of the Agv, groupbox \textit{"Stato"}, where are viewed the 32 Vehicle Status flags (XVehicleInfo.uStatus). The first 4 flags are written by the vehicle and the others can be defined by user.
+The first 4 bits (flags) are:
+\begin{itemize}
+	\item Power enabled
+	\item Execution command
+	\item Charging battery in progress
+	\item Load present, or Unit load present
+\end{itemize}
+These flags correspond to:
+\begin{lstlisting}
+// Vehicle status flags, bit mask 2^n.
+// 4 least significant bits
+
+$define VST_POTENZA_ATTIVA   1 // Power active, mask bit 0
+$define VST_EXEC_COMANDO     2 // executing command, mask bit 1
+$define VST_CARICA_INCORSO   4 // charge in progress, mask bit 2
+$define VST_CARICO_PRESENTE  8 // load present, mask bit 3
+\end{lstlisting}
+
+The Battery box, indicate the amount of power consumed, not the remaining one. for example if the status is 100\%, this mean the battery is empty, if the progress bar indicate 20\%, this mean the remaining power is 80\%. The value of the remaining gpower is shown in the \textit{Battery capacity} progress bar in the tab \textit{Vehicle informations [F3]}.\\
+
+To emulate the Agv, first the Agv emulation should be active, state shown in tab Vehicles (Veicoli). Then in the vehicle tab the operating mode can be selected, and the status can be emulated. The Agv should be in automatic and power is enabled in order to move the Agv.
+For example, if we set the flag \textit{Load present} to one, the agv behave depending on the script logic. If the load is a loading unit and there is a load in some station to take out, the Agv will go to that station. Or for example if the load is properly the final product the agv may transport it to some unloading station.
+
+\begin{figure}
+	\centering\includegraphics[scale=0.5]{agvmanager/agvManager/agvEmulation}
+	\caption{Emulation windows. We can see Agv status flags and other informations. The progress bar indicate the consumed power of the battery, not the remaining power, e.g. 100\% is battery empty. }
+	\label{fig:refAgvEmu}
+\end{figure}
+
+\subsection{Point windows property}
+A user point can be viewed as rectangle, where the dimensions are set in AgvConfigurator. A CBat (Battery point) is shown as a battery icon and . A double click on a user point or battery point a window is opened, see fig.\ref{fig:refLocation}.
+
+In the tab Storage informations, fig.\ref{fig:refLocStorageInfo}, changing the type we can see the description associated to is, e.g. Type 1 is an empty trolley. The spin box (numeric updown control) is used to show only the type, the type is a combination of the checkboxes.
+
+Properties assigned by the function \textit{AddIntProperty()}, are shown in the tab Properties fig.\ref{fig:refLocationProperties}.
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.5\textwidth}
+		\includegraphics[width=\textwidth]{agvmanager/agvManager/locStorageInfo}
+		\caption{Storage information: Load information are shown, timestamp of loading, load type.}
+		\label{fig:refLocStorageInfo}
+	\end{subfigure}
+	\quad
+	\begin{subfigure}[b]{0.5\textwidth}
+		\includegraphics[width=\textwidth]{agvmanager/agvManager/locProperty}
+		\caption{Location properties}
+		\label{fig:refLocationProperties}
+	\end{subfigure}
+	\caption{Location window: Storage information and properties}\label{fig:refLocation}
+\end{figure}
+
 \section{AGV script executing}
 AGV manager can be compared to a plc (hardware and firmaware) and the script to a plc program. The firmware is the same in all plant (beside updates and new functionality) and the script change from plant to another.
 
-AGV scripts aer witten in Xscript languagee. Xscript have some OOP properties (creating classes and objects), some event handling (mouse move event) and callback functions.
+AGV scripts are written in Xscript language. Xscript have some OOP properties (creating classes and objects), some event handling (mouse move event) and callback functions.
 
 %\newpage
 \subsection{Fundamental concepts}

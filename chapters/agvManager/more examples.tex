@@ -73,7 +73,13 @@ bVasiPieni, is a variable that indicate the presence of a load on the UDC (Loadi
 We already see some callback funtions like \textit{onApplicationStart(), onNextMission(), onExpandMacro(), onExecuteMicro()} and some utility functions like \textit{agvAddMacro(), agvAddWayPoint(), agvRegisterPassante(), agRegisterBloccante(), agvRegisterOperation()}. There are a lot of functions provided by AgvManager. We will some of them in the examples. We will see also how we can create our own functions and objects.
 
 \subsection{Movement functions}
-In the documentation we can find some functions, e.g. \textit{agvAddWayPoint(), agvMoveToWayPoint()}, to define the movement ways and methods as well as some constants. Constants related to this category of functions begin with "\textit{MoveResult\_}" or "\textit{EsitoMov\_}", some of these constants are self-explanatory, e.g. \textit{MoveResult\_WaypointReached, MoveResult\_CompletedMovement }.
+In the documentation we can find some functions, e.g. \textit{agvAddWayPoint(), agvMoveToWayPoint(), AgvRegisterMoveTo()}, to define the movement ways and methods as well as some constants.
+Constants related to this category of functions begin with "\textit{MoveResult\_}" or "\textit{EsitoMov\_}", some of these constants are self-explanatory, e.g. \textit{MoveResult\_WaypointReached, MoveResult\_CompletedMovement }.
+
+more...........
+\begin{itemize}
+	\item AgvRegisterMoveTo()
+\end{itemize}
 
 
 \subsection{MICRO registration functions}
@@ -106,11 +112,10 @@ To get a list of all micro type search in the documentation the prefix "\textit{
 	\item SetIntProperty(uint, string, int)
 	\item IntProperty(uint, string)
 	\item addInProperty(,,,,)
-	\begin{lstlisting}
+	\begin{lstlisting}[frame=none]
 	AddIntProperty(i, PROP_ASSIGNED_AGV, "Assigned agv", ACCESS_INST, XSitePropertyFlg_volatile)
 	\end{lstlisting}
 \end{itemize}	
-
 
 \section{Ex 01: Drag and drop example with loading and loading operations}
 
