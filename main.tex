@@ -42,46 +42,9 @@
 %	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
 %----------------------------------------------------------------------------------------
 
-\documentclass[12pt,fleqn]{book} % Default font size and left-justified equations
-\renewcommand{\baselinestretch}{1.25} 
+ 
 %----------------------------------------------------------------------------------------
 
-\input{structure} % Insert the commands.tex file which contains the majority of the structure behind the template
+\input{styling/structure} % Insert the commands.tex file which contains the majority of the structure behind the template
 
-\begin{document}
-
-%----------------------------------------------------------------------------------------
-%	TITLE PAGE, COPYRIGHT PAGE, TABLE OF CONTENTS
-%----------------------------------------------------------------------------------------
-\include{chapters/front/front}
-
-%----------------------------------------------------------------------------------------
-%	PART
-%----------------------------------------------------------------------------------------
-\input{chapters/front/intro}
-
-%\part{Mobile Robotics}
-%\input{"chapters/mobilerobots/kinematics"}
-%\input{"chapters/mobilerobots/perception"}
-%\input{"chapters/mobilerobots/localization"}
-%\input{"chapters/mobilerobots/navigation"}
-
-\part{AGV Manager}
-\input{chapters/agvManager/Overview}
-\input{chapters/agvManager/rat}
-\input{"chapters/agvManager/AGV Manager"}
-\input{"chapters/agvManager/more examples"}
-
-\part{Motion control}
-%\input{chapters/ch3}
-\input{"chapters/appendix/external editors"}
-\part{Appendices}
-
-
-\part{Bibliography}
-%\input{chapters/bib}
-%\input{chapters/index}
-
-%----------------------------------------------------------------------------------------
-
-\end{document}
+\input{chapters/tree}

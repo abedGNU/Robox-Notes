@@ -13,10 +13,9 @@ endif
 "
 "
 "
-syn keyword xscriptKeyword END
+syn keyword xscriptKeyword and or return true false continue break not
 
-syn keyword xscriptConstant O_LOAD O_UNLOAD
-syn keyword xscriptConstant MAC_END MAC_END
+syn keyword xscriptConstant VST_CARICO_PRESENTE MIC_MOVE MIC_CURVE MIC_ROTATION MIC_OPERATION MIC_SYSTEM MIC_PASSANTE MIC_WAIT O_UNLOAD O_LOAD O_CHARGE S_END S_CHARGE_STOP S_CHARGE_START O_CHARGE_START VST_EXEC_COMANDO S_CHARGE_WAIT O_CHARGE_STOP EsitoMov_MovimentoCompletato EsitoMov_RaggiuntoWaypoint
 
 
 
@@ -27,10 +26,11 @@ syn keyword xscriptPreProc $include
 
 syn keyword xscriptStdFunc qt_warning
 
-syn keyword xscriptFunc OnApplicationStart OnApplicationStop OnNextMission OnAbortMission OnExpandMacro OnExecuteMicro 
-syn keyword xscriptFunc OnNextMissionDebugMessage SiteExists AgvGetVehicleInfo AgvGetSiteInfo SetAccessLevelForOperation AddIntProperty
+syn keyword xscriptFunc OnApplicationStart OnApplicationStop OnNextMission OnAbortMission OnExpandMacro OnExecuteMicro OnAgvStatusChange OnAgvModeChange OnAgvDroppedToPoint OnUpdateIO OnCommandInterpreter OnGetMissionText 
 
-syn keyword xscriptType int uint bool real uchar $define XListaSiti XSiteInfo XVehicleInfo XMapParams 
+syn keyword xscriptFunc OnNextMissionDebugMessage SiteExists AgvGetVehicleInfo AgvGetSiteInfo SetAccessLevelForOperation AddIntProperty AgvGetSemaphoreRequestMask AgvGetInput AgvSetOutput AgvSetGreenSemaphore IntProperty SetIntProperty qt_debug MessageBox SetAgvStatusDescription SetVersioneManager AgvGetMapParams AgvSetMapParams AgvSetLunghezzaMove StrFormat qt_warning MultiMessageState GetSiteName AgvGetUserFlags AgvRegisterOperation AgvRegisterSystemBloccante SetAgvMessage AgvComputeNextMacro AgvStopMission AgvAddMacro MessageState AgvExecLoad EMUAGV_SetFlags AgvRegisterMoveTo AssignedPathLength AgvMoveToWayPoint
+
+syn keyword xscriptType int bool real $define $undef $include XListaSiti XSiteInfo XVehicleInfo XMapParams uint XForm XSettings timeout 
 
 syn keyword xscriptStorage code forward
 syn keyword xscriptStructure object

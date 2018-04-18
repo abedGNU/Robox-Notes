@@ -1,5 +1,6 @@
 # Robox notes
 Robox softwares notes
+This document is written in LaTex
 
 #### Robox Spa
 Robox motion control

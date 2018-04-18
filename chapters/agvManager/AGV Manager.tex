@@ -370,3 +370,72 @@ In the function \textit{onExecuteMicro()} under the case MIC\_SYSTEM and under t
 When the mission is stopped, the micro terminate, and eventually other micros can start. When a micro terminate the execution of the function \textit{onExecuteMicro()} return true. \\
 
 \lstinputlisting[language=c++, firstline=217, lastline=277, caption=OnExecuteMicro, label=lbl:OnExecuteMicro]{listing/agvDropToPoint_v0.xs}
+
+\section{Summary}
+In automatic mode, if the Agv is not executing a mission, if it is enabled the callback function \textcolor{blue}{onNextMission()} is called. If there is a mission in progress, even if the Agv is not enabled, continue to execute the mission till the end or till receiving an abort mission command, see fig.\ref{fig:mainLoop}.
+
+For example, in the implementation of the function \textcolor{blue}{onNextMission()} missions can be assigned to agv depending on the plant status, e.g. by calling a user defined function \textcolor{blue}{RegisterMission()}. Th signature of the the function \textcolor{blue}{RegisterMission()} can be defined as we wish.
+
+\begin{lstlisting}[caption=onNextMission() missions are assigned]
+	//onNextMission()
+	
+	// register mission depending on the plant logic
+	RegisterMission(uAgv, MIS\_LOAD\_FROM\_STATION, iPar1, iPar2)
+\end{lstlisting}
+
+In the function \textcolor{blue}{RegisterMission()}, depending on the mission we compile the \textcolor{red}{macro list}. For example if our mission is to go to load a product the macro list will composed in the following way:
+\begin{lstlisting}[caption=RegisterMission() macro list is composed]
+	// RegisterMission()
+	
+	//Start mission with id uMissionCode
+	AgvStartMission(uAgv, uMissionCode, MissionDescription)
+
+	case MIS_LOAD_FROM_STATION
+		//
+		uint wpidx
+		uchar destOrientation='X'
+		bool concatenateNext=true
+		wpidx = AgvAddWaypoint(uAgv, ID_LOAD_STATION, destOrientation)
+		AgvAddMacro(uAgv, MAC_MOVE_TO_WP, wpidx, concatenateNext)
+		
+		// Wait for operator to load toilet
+		AgvAddMacro(uAgv, MAC_WAIT_END_LOADING)
+		
+		// END of this mission
+		AgvAddMacro(uAgv, MAC_END, uCode)
+		break
+\end{lstlisting}
+
+When a mission is in progress, and the macro list is not empty, the callback function \textcolor{blue}{onExpandMacro()} is called. Depending on the macro we compile a list of micro instructions. For example one of the macros was \textcolor{blue}{MAC\_WAIT\_END\_LOADING}:
+
+\begin{lstlisting}[caption= onExpandMacro() micro list is composed]
+	//onExpandMacro()
+	case MAC_WAIT_END_LOADING
+		AgvRegisterSystemBloccante(uAgv, uMission, S_START_WAIT, 30)
+		AgvRegisterSystemBloccante(uAgv, uMission, S_EXEC_WAIT)
+		AgvRegisterOperation(uAgv, uMission, O_WAIT_LOAD)
+		break
+\end{lstlisting}
+
+After the call of \textcolor{blue}{onExpandMacro()} the callback function \textcolor{blue}{onExecuteMicro()} is called, and depending on the micro we execute operation and instructions:
+
+\begin{lstlisting}[caption=onExecuteMicro() micro are aexecuted]
+	//onExecuteMicro()
+	
+	case S_START_WAIT
+		timerWait[uAgv] = timeoutS(iPar1)
+		break
+	
+	case S_EXEC_WAIT
+		if (isTimeout(timerWait[uAgv]))
+			return true
+		else
+			MultiMessageState(uAgv, "Agv " + (uAgv + 1) + " : wait " + int(secsToTimeout(timerWait[uAgv])) + "s")
+			return false
+		endif
+		break
+\end{lstlisting}
+
+The state of mission execution is monitored cyclically. This mean that when a mission begin the functions \textcolor{blue}{onExpandMacro()} and \textcolor{blue}{onExecuteMicro()} are called repeatability until the end of the mission, see fig. \ref{fig:missionExec}.
+
+The main logic of AGVs is written in the function \textcolor{blue}{onNextMission()}, where missions are assigned to AGV. When the logic is divided by missions, it is relativley easy to write the other 3 main fucntions : \textcolor{blue}{ registerMission(), onExpandMacro() and onExecuteMicro()}. Helper functions can be implemented to implement some useful logic.

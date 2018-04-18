@@ -14,11 +14,17 @@ An Agv usually transport a loading unit (UDC, LU) e.g. pallet, trolley, etc. , o
 For the presence Loading unit we find the variable bPresenza or bPres.
 For the presense of a load on board of the Loading Unit (UDC) we find the variable bVasiPieni.
 
+%----------------------------------------------------------------------------------------
+%	 Data structures
+%----------------------------------------------------------------------------------------
 \section{Xscript Agv Data structures}
 In the documentation under the voice \textcolor{blue}{Estensione x-script per AgvManager » Funzioni per la gestione degli agv}, we can find some functions and data structures to manage AGVs. Here will present some data structures and functions that can operate on them.
 
 Note that AgvManager have internal data structures where to save informations about vehicles, maps, points, etc. When we need, for example to get information about agv number 4, we create a strucutre similar to the one AgvManager have and by calling a dedicated function we can get information on Agv 4.
 
+%------------------
+%
+%------------------
 \subsection{XMapParams}
 This structures contains some fields to define the dimensions of an AGV and movement behavior. There are two functions that operate on this structure to get information from AgvManger and set information to it.
 For example, if we define a variable \textcolor{blue}{mPar} as: \textcolor{blue}{XMapParams mPar}, we can read parameter from AgvManager and store them into this structure by calling the function \textcolor{blue}{AgvGetMapParams(@mpar)}.
@@ -29,6 +35,9 @@ Note the use of \textcolor{blue}{@} when passing the variable mPar to these 2 fu
 
 Meaning of the structure fields??????????
 
+%------------------
+%
+%------------------
 \subsection{XVehicleInfo}
 This data structure contain information about the vehicle, for example alarm status, mission in progress, operating mode, capacity of battery, etc.
 To get information from AgvManager about the vehicle we can call the function \textcolor{blue}{AgvGetVehicleInfo(uint agvId, xvehicleinfo\& info)}, we pass to the function the index of the agv and an XVehicleInfo variable.
@@ -53,6 +62,9 @@ For example we need to know if the vehicle have a load on board, we can write:
 The first 4 bits (from 0 to 3), are reserved to system vehicle status (status communicated by the vehicle to AgvManager).
 The user can define its own flag status beginning from bit 4, depending on the state of the vehicle and the plant requirements.\\
 
+%------------------
+%
+%------------------
 \subsection{XSiteInfo}
 A data structure where information about user points can be stored.
 By calling \textcolor{blue}{agvGetSiteInfo(int userPointId, XSiteInfo\& sInfo)} we can get the user point informations from AgvManager. The function have as parameter the id or code of the user point and a reference of a \textcolor{blue}{XSiteInfo} variable.
@@ -69,9 +81,15 @@ Some fields can be read and write \textcolor{blue}{(rw)} from the script others 
 
 \textcolor{blue}{bVasiPieni} is a variable that indicate the presence of a load on the UDC (Loading Unit).
 
+%----------------------------------------------------------------------------------------
+%
+%----------------------------------------------------------------------------------------
 \section{Some useful functions}
 We already see some callback funtions like \textcolor{blue}{onApplicationStart(), onNextMission(), onExpandMacro(), onExecuteMicro()} and some utility functions like \textcolor{blue}{agvAddMacro(), agvAddWayPoint(), agvRegisterPassante(), agRegisterBloccante(), agvRegisterOperation()}. There are a lot of functions provided by AgvManager. We will some of them in the examples. We will see also how we can create our own functions and objects.
 
+%------------------
+%
+%------------------
 \subsection{Movement functions}
 In the documentation we can find some functions, e.g. \textcolor{blue}{agvAddWayPoint(), agvMoveToWayPoint(), AgvRegisterMoveTo()}, to define the movement ways and methods as well as some constants.
 Constants related to this category of functions begin with \textcolor{blue}{MoveResult\_} or \textcolor{blue}{EsitoMov\_}, some of these constants are self-explanatory, e.g. \textcolor{blue}{MoveResult\_WaypointReached, MoveResult\_CompletedMovement }.
@@ -81,7 +99,9 @@ more...........
 	\item AgvRegisterMoveTo()
 \end{itemize}
 
-
+%------------------
+%
+%------------------
 \subsection{MICRO registration functions}
 The following functions register a micro operation or instruction:\\
 
@@ -119,10 +139,16 @@ To get a list of all micro type search in the documentation the prefix "{MIC\_}"
 	\end{lstlisting}
 \end{itemize}	
 
+%----------------------------------------------------------------------------------------
+%
+%----------------------------------------------------------------------------------------
 \section{Ex 01: Drag and drop example with loading and loading operations}
 
 In this example we will see how we can perform a drag and drop to a user point. A user point represent a working station, that could be machine or simply a position in a store. For example in an automatic store, a user point may represent the position where materials can be stoked or picked. A user point have a property called \textcolor{blue}{bPresenza} that indicate the presence of material in the position designated by the user point or its absence.\\
 
+%------------------
+%
+%------------------
 \subsection*{OnAgvDroppedToPoint()}
 In the function \textcolor{blue}{OnAgvDroppedToPoint()}, after the verification of requirements, we will register 3 missions depending on the case if the point is a user point or generic point, if the agv have a load or the user point have a load. In listing \ref{lstDrag} the code and explanations are shown.
 
@@ -175,6 +201,9 @@ Listing \ref{lstDrag} can be found in the file \textcolor{blue}{agvEventFucntion
 
 When the user drag and drop the vehicle onto a point, the callback function {OnAgvDroppedToPoint()} is called, then the function \textcolor{blue}{RegisterMission()} is called inside it as we can in the listing \ref{lstDrag}.
 
+%------------------
+%
+%------------------
 \subsection*{RegisterMission()}
 The function \textcolor{blue}{RegisterMission()} is a user defined function, with the goal to assign missions, can be found in \textcolor{blue}{common.xs}.
 
@@ -303,7 +332,9 @@ In this case mission are registered by calling the user defined function \textco
 
 Independently on how a mission is registered, when a mission is started the callback function \textcolor{blue}{onExpandMacro()} is called in order to begin the execution of macros and micors.
 
-
+%------------------
+%
+%------------------
 \subsection*{onExpandMacro()}
 
 \textcolor{blue}{onExpandMacro()} is called when there are MACROs in the macro list, check the flowchart in the official documentation and in the previous chapter, in the section mission execution.
@@ -363,6 +394,9 @@ The macro \textcolor{blue}{MAC\_MOVE\_TO\_WP} execute the movement command by ca
 
 After the expansion of macros, the micro are executed by calling the callback fucntion \textcolor{blue}{onExecuteMicro()}.
 
+%------------------
+%
+%------------------
 \subsection*{OnExecuteMicro()}
 We see how micros are registered when macros are expanded. Now we see how micros are executed.
 The \textcolor{blue}{MAC\_LOAD\_TROLLEY} had registered an \textcolor{blue}{O\_LOAD} micro of type \textcolor{blue}{MIC\_OPERATION}.
@@ -430,8 +464,14 @@ The case of \textcolor{blue}{S\_END}, the function \textcolor{blue}{AgvStopMissi
 
 The \textcolor{blue}{MIC\_MOVE} are handled by AgvManager not by the script. So is not necessary to write the case of micro movements.
 
-\section{Ex 02: Comple exaple}%Interaction with the plant}
 
+%----------------------------------------------------------------------------------------
+%		
+%----------------------------------------------------------------------------------------
+\section{Overview on some functions}
+%------------------
+%	Access level
+%------------------
 \subsection{Access level}
 Sometime in a plant to a worker is permitted to do some job, to maintainer other jobs and so. In AgvManager are defined 5 different levels of users, that correspond to 5 different constants:
 
@@ -447,13 +487,9 @@ The actual level can be read by calling the function \textcolor{blue}{ActualAcce
 
 \textcolor{blue}{SetAccessLevelForOperation(DefQual\_OpTrascinaAgvSuLinea, ACCESS\_INST)}.
 
-\subsection{Settings: XSettings}
-
-settings.ini file strucuture
-
-\subsection{Interaction with user: XForm}
-Qt creator
-
+%------------------
+%	onUpdateIO
+%------------------
 \subsection{onUpdateIO()}
 Drag and drop is useful to test vehicle. Normally a vehicle have to respond to some commands and react under some conditions that come from the plant. AgvManager can read input and output from a plc or a database. The callback function \textcolor{blue}{onUpdateIO(,,)} is used to read input from a plc and write outputs to a plc.
 
@@ -466,11 +502,11 @@ There are different get and set functions to read inputs and write outputs, it d
 
 Note that the first bit have $offset = 1$ not $0$. It is convenient to define some constants that represent IO signals. For example it the signal \textcolor{blue}{Unloading done}, e.g. a push button connected to input 7, i.e. byte 0 bit 7, we can define a constant like \textcolor{blue}{\$define INP\_UNLOADING\_DONE 7}, then call the function \textcolor{blue}{bool iUnloadDone= AgvGetInput(INP\_UNLOADING\_DONE)}. The same can be done for Outputs.
 
-\subsection{Semaphores}
-AgvGetSemaphoreRequestMask
-AgvSetGreenSemaphore
 
-\subsection{Agv status flag change : OnAgvStatusChange() }
+%------------------
+%
+%------------------
+\subsection{OnAgvStatusChange(): Agv status flag change}
 When the flag status of the vehicle \textcolor{blue}{(xVehicleInfo.uStatus)} change value, the callback function \textcolor{blue}{OnAgvStatusChange()} is called by AgvManager.
 
 The fucntion \textcolor{blue}{SetAgvStatusDescription(uAgv, int stId, string desc)}. We can set the description of the bit with index stId.
@@ -485,13 +521,162 @@ In this example we change the description into "Trolley on agv", the string is H
 
 The function \textcolor{blue}{AgvSetAgvLoadInfo()} set information about the Loading Unit (UDC, Unita Di Carico) on the vehicle, e.g. \textcolor{blue}{AgvSetAgvLoadInfo(uAgv, bpresenza, loadType, bVasiPieni)}, bPresenza will be bPalletOnAgv, bVasiPieni will be bPalletFull.
 
-\subsection{Agv Operating mode change: OnAgvModeChange()}
+%------------------
+%
+%------------------
+\subsection{OnAgvModeChange(): Agv Operating mode change}
 When the vehicle operating mode \textcolor{blue}{(xVehicleInfo.uMode)} changed, AgvManager call the callback function \textcolor{blue}{OnAgvModeChange(uint uAgv, uint oldMode, uint newMode)}.
 
 By calling the function \textcolor{blue}{bool AgvInAutomatico(uAgv)} we get true if the Agv is in automatic mode, i.e. \textcolor{blue}{VM\_AUTOMATICO}, or in manual emergency mode, i.e. \textcolor{blue}{VM\_MANU\_EMERG}.
 
 Look for the prefix \textcolor{blue}{VM\_} or \textcolor{blue}{MOD\_} to get a list of operating modes, depending on the Agv navigation type.
 
+%------------------
+%
+%------------------
+\subsection{Settings: XSettings}
+
+settings.ini file strucuture
+
+%------------------
+%
+%------------------
+\subsection{Interaction with user: XForm}
+Qt creator
+
+%------------------
+%
+%------------------
+\subsection{Semaphores}
+AgvGetSemaphoreRequestMask
+AgvSetGreenSemaphore
+
+
+
+%----------------------------------------------------------------------------------------
+%		Storage example
+%----------------------------------------------------------------------------------------
+\section{Ex 02: Storage example}
+In this example we will see how to handle a store with one agv. Let's suppose that use have a store with a matrix layout, one loading station and two unloading stations.
+The loading unit is a pallet. The agv go to the loading area with an empty pallet, a worker load the product manually on the pallet, once finish the Agv take the full pallet to the store. After a specific time the agv take out the pallets from the store to the unloading area following the FIFO (First In First Out) logic. The Agv leave the pallet in one unloading area, then go to the store to take another pallet or to the loading station to take some products. Keep in mind that the Agv need a pallet on board in order to load products, for this reason the Agv may take an empty pallet from the unloading area (if worker have already free the pallet from products) or turn back to the store to take an empty pallet then go to the loading area.
+
+%------------------
+%
+%------------------
+\subsection{Missions}
+First of all we have to identify the missions in order to accomplish the requirements. It si relativley simple to do it. It is enough to write what the agv have to do in sequence, than figure out some special cases.
+For example a normal working flow is: 
+\begin{itemize}
+	\item the Agv have to take a product from the loading station
+	\item then take it into the store
+	\item then take out the product from the store
+	\item then take it to the unloading area
+\end{itemize}
+this normal flow is composed by 4 missions. We say that the agv need a pallet on board in order to load products, so we need to take some pallet from somewhere. Let's say we can take empty pallets from the store or from the unloading area if the worker have already free the pallet. So we have other 2 missions.
+\begin{itemize}
+	\item take empty pallet from store
+	\item take empty pallet from unloading area.
+\end{itemize}
+Let's say the worker free the pallet in the unloading area, and we have to take out a full pallet from the store, before doing this we have to take out the empty pallet from the unloading area. Then take it to the store or to load products, notes that these 2 missions are already identified.
+\begin{itemize}
+	\item take empty pallet out from the unloading area
+\end{itemize}
+
+Now suppose that we don't have anything to do and we have to wait to decide what to do, so we have a Null mission. 
+
+The agv use battery as power source, so a further mission could be: go to charging station. If the working time finish, at he end of the day we can decide to send the agv to some parking position: home position mission.
+We can figure out other mission, but for this example these missions are enough. Identified mission are summarized in the following listing:
+
+\begin{lstlisting}[caption= Agv Missions, label=lstStoreMissions]
+	// Missions
+	$define MIS_NULL							0		// Nothing to do
+	$define MIS_LOAD_TOILET_FROM_STATION		1		// Go to loading station to take a trolley
+	$define MIS_PUT_TOILET_TO_STORE				2		//  Take the toilet to the store
+	$define MIS_LOAD_TOILET_FROM_STORE			3		// Take something out of store
+	$define MIS_LOAD_EMPTY_TROLLEY_FROM_STORE	4		// Take something out of store
+	$define MIS_TAKE_TOILET_TO_UNLOAD			5		// Take the toilt already on agv to unloading station
+	$define MIS_EMPTY_TROLLEY_FROM_UNLOAD		6		// Go take an empty trolley from unload area
+	$define MIS_PUT_EMPTY_TROLLEY_ON_STORE		7		// Agv has an empty trolley, put it on store
+	
+	$define MIS_TO_BATTERY_CHARGE				12
+	$define MIS_TO_HOME							13
+\end{lstlisting}
+
+The main logic of assigning missions will be implemented in the function \textcolor{blue}{onNextMission()}. After assigning a mission a macro list have to be compiled, and it will be done in another function, called from \textcolor{blue}{onNextMission()}.
+
+\subsection{onNextMission()}
+Have a look on the main loop execution, fig.\ref{fig:mainLoop} to get an idea about when the callback function is called or read the documentation. Now let's assign some mission to the agv.
+
+First let's read state of the AGV by calling \textcolor{blue}{AgvGetVehicleInfo(uAgv, @agvInfo)} where \textcolor{red}{uAgv} the Agv index and \textcolor{red}{agvInfo} is a \textcolor{red}{XVehicleInfo}. From the variable \textcolor{red}{agvInfo} we can get information about the battery capacity of the Agv, the status of the Agv, etc.
+
+We have to check if the Agv have enough power to execute a mission, and if the Agv have a pallet (UDC) on board or not, if it have a pallet, it is empty or have some product?
+Let's define two flags in the agv flag status, \textcolor{red}{agvInfo.uStatus}. One to determine if the full pallet on the agv come from the store or from the loading area? For example $\textcolor{red}{agvflg_ProductGoingOutOfStore=TRUE}$ then it is a pallet that come out from the store and should go to unloading area, otherwise if equal false, it come the loading area and have to go to the store.
+The other flag to determine if the pallet is empty or not, $\textcolor{red}{agvflg_ProductOnPallet}$.
+
+\begin{lstlisting}
+	// user defined vehicle status flags
+	$define agvflg_ProductOnPallet			0x0100 // bit 8 in agvInfo.uStatus
+	$define agvflg_ProductGoingOutOfStore	0x0200 // bit 9 in agvInfo.uStatus
+\end{lstlisting}
+
+Then let's defined some boolean variables that will help in the decision and selection of missions:
+
+\begin{lstlisting}[caption = Desision variables or plant status]
+	bool mustGoToChargeBattery // no pwer, Agv must go the cahrg
+	bool trolleyOnAgv	// Agv have pallet or loading unit, don't consider the product
+	bool toiletOnTrolley // Agv have a full pallet = Loading unit + product
+	bool takeOutToilet // Full pallet come out from store
+	
+	// Unloading unit have empty trolley to take away
+	bool mustRemoveTrolleyFromUnload
+	
+	mustGoToChargeBattery = (agvInfo.dBatteryPerc <= MIN_BATTERY)
+	
+	trolleyOnAgv = (agvInfo.uStatus & VST_CARICO_PRESENTE)
+	toiletOnTrolley = trolleyOnAgv and (agvInfo.uStatus & agvflg_ProductOnPallet)
+	takeOutToilet = toiletOnTrolley and (agvInfo.uStatus & agvflg_ProductGoingOutOfStore)
+	
+\end{lstlisting} 
+
+Depending on the value of these variables we can assign mission to Agv. For example if the agv have a full pallet on board and that pallet come out from the store, it should go to the unloading area.
+\begin{lstlisting}[caption= Mission to unloaing area]
+		if (takeOutToilet)
+			OnNextMissionDebugMessage(uAgv, "takeOutToilet=T : <font color=green>assign mission MIS_TAKE_TOILET_TO_UNLOAD</font>")
+			return RegisterMission(uAgv, MIS_TAKE_TOILET_TO_UNLOAD)
+		endif
+\end{lstlisting}
+
+The function \textcolor{blue}{OnNextMissionDebugMessage()} is used to show debugging message in  \textcolor{red}{the vehicle information [F3]} tab.\\
+
+If the Agv have a full pallet and the pallet doesn't come out from the store, it come from the loading are, the agv have to take the pallet to the store:
+
+\begin{lstlisting}[caption= Mission take full pallet into store]
+	if (toiletOnTrolley)
+		int storePosition
+		// Find a position on the store where to put the trolley
+		storePosition = store_hnd.positionForTakeInTrolley(uAgv, true)
+		if (not SiteExists(storePosition))
+			OnNextMissionDebugMessage(uAgv, "toiletOnTrolley=T : <font color=red>position in store not found</font>")
+			return MIS_NULL
+		endif
+		OnNextMissionDebugMessage(uAgv, "toiletOnTrolley=T, storePosition=" + storePosition + " : <font color=green>assign mission MIS_PUT_TOILET_TO_STORE</font>")
+		return RegisterMission(uAgv, MIS_PUT_TOILET_TO_STORE, storePosition)
+	endif
+	
+\end{lstlisting}
+
+
+\subsection{Macros}
+
+\subsection{Creating objects}
+
+\subsection{FIFO logic}
+
+
+%----------------------------------------------------------------------------------------
+%
+%----------------------------------------------------------------------------------------
+\section{Ex 0: More than one AGV}
 
 
 
