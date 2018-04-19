@@ -14,6 +14,7 @@ An Agv usually transport a loading unit (UDC, LU) e.g. pallet, trolley, etc. , o
 For the presence Loading unit we find the variable bPresenza or bPres.
 For the presense of a load on board of the Loading Unit (UDC) we find the variable bVasiPieni.
 
+Data structures and constants definition can be found in \textcolor{red}{Script editor - All functions}.
 %----------------------------------------------------------------------------------------
 %	 Data structures
 %----------------------------------------------------------------------------------------
@@ -34,7 +35,41 @@ To apply modification onto AgvManager we have to call the function \textcolor{bl
 Note the use of \textcolor{blue}{@} when passing the variable mPar to these 2 functions. The variable is passed by reference not by value.
 
 Meaning of the structure fields??????????
-
+\begin{lstlisting}[language=c++,caption= XMapParams, label=lstXMapParams]
+	;
+	;
+	//	Parametri definizione comportamento movimentazione veicoli
+	;
+	object XMapParams
+		internal 0x02000093 setSymmetricalVehicleDimension(int length, int width, int diagonal=0)
+		internal 0x02000094 setVehicleDimension(int length_front, int length_rear, int width_left, int width_right, int radius = 0)
+		int iLunghVeicolo                  // Larghezza veicolo (per anticollisione)
+		int iLarghVeicolo                  // Lunghezza veicolo (per anticollisione)
+		int iDiagVeicolo                   // Diagonale veicolo (per anticollisione, autocalcolata se == 0)
+		int iVehicleLengthFront            // Lunghezza veicolo dal centro in avanti (per anticollisione)
+		int iVehicleLengthRear             // Lunghezza veicolo dal centro all'indietro (per anticollisione)
+		int iVehicleWidthLeft              // Larghezza veicolo dal centro verso sinistra (per anticollisione)
+		int iVehicleWidthRight             // Larghezza veicolo dal centro verso destra (per anticollisione)
+		int iVehicleRadius                 // Raggio di massimo ingombro durante rotazione (per anticollisione)
+		real dHandicapIncrocio             // Distanza aggiunta per uso incrocio (DEPRECATO)
+		real dHandicapForRotation          // Distanza aggiunta per ogni rotazione
+		real dHandicapForCurve             // Distanza aggiunta per ogni curva
+		real dUseHandicap                  // Handicap per segmenti prenotati in senso contrario
+		real dFattoreCurva                 // (Non usato, deprecato) Fattore moltiplicativo dell'ingombro in caso di curva
+		real dAngMinCurvaOk                // Angolo per cui il cambio di corridoio e' possibile con una rotazione anche se c'e' divieto di ingombro dei quadranti (cambio verso)
+		real dHandicapIncontraDestMove     // Distanza aggiunta se si incontra un veicolo fermo. Se negativa non si passa proprio (ricerca di un percorso alternativo)
+		real dHandicapMarciaIndietro       // Handicap moltiplicativo per tratti a marcia indietro
+		real dDistanzaDaIncrocioOkFermata  // Distanza minima per fermata prima o dopo un incrocio in prenotazione movimento
+		bool bOkInversioneSuIncrocio       // Ok inversione su incrocio
+		bool bNoFermataSuIncrocio          // Vietato fermare su incrocio
+		bool bPalletBloccaPercorso         // Non si passa su user di tipo 'C' occupato
+		bool bNoMovSuTrattiPrenotati      // Non muovere gli agv su tratti prenotati da altri agv
+		bool bNoPercorsoAgvNoMis          // Escludi dal percorso tratti su cui si trovano agv non in missione
+		bool bNoPercorsoAgvDisab          // Escludi dal percorso tratti su cui si trovano agv disabilitati (e non in missione)
+		bool bDontMoveOnDestMove          // Non muovere un agv se andrebbe a finire sulla destinazione di un altro agv
+		int iAgvPosThreshold              // Soglia di posizione agv
+	endobject
+\end{lstlisting}
 %------------------
 %
 %------------------
@@ -62,11 +97,34 @@ For example we need to know if the vehicle have a load on board, we can write:
 The first 4 bits (from 0 to 3), are reserved to system vehicle status (status communicated by the vehicle to AgvManager).
 The user can define its own flag status beginning from bit 4, depending on the state of the vehicle and the plant requirements.\\
 
+\begin{lstlisting}[language=c++,caption= XVehicleInfo, label=lstXVehicleInfo]
+//
+//	Informazioni stato attuale veicolo
+//
+object XVehicleInfo
+	uint uLineID            // Id. linea attuale agv
+	int iPosition           // Posizione [mm] dell'agv sulla linea attuale
+	int iAngle              // Angolo in gradi attuale dell'agv
+	uint uMode              // Modalita' attuale veicolo (vedi etichette VM_***)
+	uint uStatus            // Flag di stato veicolo (vedi etichette VST_***)
+	uint uAlarmStatus       // Flag di allarme veicolo
+	uint uBatteryCapacity   // Capacita' batteria:
+	// 0		= Batteria completamente carica
+	// 1000	= Batteria completamente scarica
+	float dBatteryPerc      // Percentuale carica batteria : 0.0	= completamente scarica, 100.0 = completamente carica
+	uint uMission           // Id. missione attuale agv
+	uint uCommand           // Id. comando attuale agv
+	uint uDirV              // Direzione sul corridoio: uno tra [FRSD]
+	uint uExtendedPalletId  // Identificativo informazioni estese pallet (se presenti)
+	XLastMoveInfo lastMove  // Ultimo movimento registrato (.isValid indica validita', in piu' se non valido, .uLine == 0)
+	XLastMoveInfo destMove  // Destinazione finale (.isValid indica validita', in piu' se non valido, .uLine == 0)
+endobject
+\end{lstlisting}
 %------------------
 %
 %------------------
 \subsection{XSiteInfo}
-A data structure where information about user points can be stored.
+A data structure where information about site can be stored. A site can be a user point or a battery point.
 By calling \textcolor{blue}{agvGetSiteInfo(int userPointId, XSiteInfo\& sInfo)} we can get the user point informations from AgvManager. The function have as parameter the id or code of the user point and a reference of a \textcolor{blue}{XSiteInfo} variable.
 The function return true if the user point exist.
 With the function \textcolor{blue}{agvSetSiteInfo(int userPointId, XSiteInfo\& sInfo)} we can set the parameter of a user point in AgvManager.\\
@@ -81,6 +139,90 @@ Some fields can be read and write \textcolor{blue}{(rw)} from the script others 
 
 \textcolor{blue}{bVasiPieni} is a variable that indicate the presence of a load on the UDC (Loading Unit).
 
+\begin{lstlisting}[language=c++, caption= XSiteInfo, label=lstXSiteInfo]
+//
+//	Informazioni associate a punto USER
+//
+object XSiteInfo
+	bool bAttiva           // (rw)
+	bool bPriorita         // (rw)
+	bool bPresenza         // (rw) // UDT on board
+	bool bVasiPieni        // (rw) // product on borad of UDT
+	bool bInAllarme        // (rw)
+	bool bVisibile         // (rw)
+	uint uTipo             // (rw)
+	uint uFlags            // (ro) // Vehicle flags. see UF_***
+	real dStoreTime        // (ro) in giorni
+	uint uLato             // (ro) [L (sinistra) | R (destra) | C (centro)]
+	uint uExtendedPalletId // (ro) Identificativo informazioni estese pallet (se presenti)	
+endobject
+\end{lstlisting}
+
+By calling the function \textcolor{blue}{agvGetUserFlags(uint user)}, we get the user point flags (XSiteInfo.uFlags).
+\begin{lstlisting}[language=c++,caption= User point flags, label= lstUserFlags]
+	//
+	// Definizione codici User Flags
+	//
+	// Flags riservati ad AgvManager :
+	$define UF_MODIFIED            1
+	$define UF_NO_FREQ             2
+	$define UF_INUSE               4
+	$define UF_PRE_INUSE           8
+	$define UF_PALLET_SU_PERCORSO  32
+	$define UF_MASK_FLAGS_AGVM     4095
+	
+	// Flags impostabili da script ed usati da AgvManager
+	$define UF_ACCESSIBLE          0x00001000	// Passaggio attraverso user possibile (default vero)
+	$define UF_FORCE_STOP          0x00002000	// Obbligo di spezzare movimento
+	$define UF_NO_STOP             0x00004000	// Punto di sosta vietata
+	$define UF_NO_STOP_CROSS       0x00008000	// E' vietato fermare l'agv su questo incrocio
+	$define UF_FORCE_BREAK_CROSS   0x00010000	// Obbligo di spezzare movimento su incrocio
+	$define UF_BLINK_ICON          0x00020000	// Se sito in attesa di missione o riservato, icona blinka
+	$define UF_NO_INVERSIONE       0x00040000	// Vietato fare inversione su questo punto
+	
+	// Flags impostabili da script e non usati da AgvManager
+	$define UF_RESERVED            0x00080000	// Prenotato da agv per missione (viene disegnato bollo rosso)
+	$define UF_MISS_OK             0x00100000	// Sito in attesa di missione (viene disegnato bollo verde)
+	$define UF_FLAG_XSCRIPT        0x01000000	// Primo flag utilizzabile liberamente da script
+	
+	//  Esempio d'uso :
+	//  $define UF_MY_FLAG_1			shl(UF_FLAG_XSCRIPT,1)
+	//  $define UF_MY_FLAG_2			shl(UF_FLAG_XSCRIPT,2)
+\end{lstlisting}
+
+
+\subsection{XListaSiti}
+The xListaSiti store a reference to a site (user o battery point). The operations done on elements of list are applied to sites in map. Imagine the list as a pointer to the sites in map.
+
+\begin{lstlisting}[language=c++,caption= XListaSiti, label= lstXListaSiti]
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//    Gestione lista siti    
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+object XListaSiti
+	uint pObj									// INTERNAL POINTER - DO NOT TOUCH
+	internal 0x02000600 Constructor()
+	internal 0x02000601 Destructor()
+	internal 0x02000602 IsEmpty() : bool		// Test se lista vuota
+	internal 0x02000603 Count() : uint			// Ritorna numero siti in lista
+	internal 0x02000604 Prepend(uint)			// Aggiunge sito in testa alla lista
+	internal 0x02000604 AddHead(uint)			// DEPRECATED
+	internal 0x02000605 Append(uint)			// Aggiunge sito in coda alla lista
+	internal 0x02000605 AddTail(uint)			// DEPRECATED
+	internal 0x02000606 Find(uint) : uint		// Torna posizione sito in lista (-1 se non trovato)
+	internal 0x02000607 RemoveFirst() : uint	// Rimuove il primo sito dalla lista, e ne torna il valore
+	internal 0x02000607 RemoveHead() : uint		// DEPRECATED
+	internal 0x02000608 RemoveLast() : uint		// Rimuove l'ultimo sito dalla lista, e ne torna il valore
+	internal 0x02000608 RemoveTail() : uint		// DEPRECATED
+	internal 0x02000609 RemoveAt(uint) : uint	// Rimuove il sito alla posizione specificata (ritorna l'indice del sito rimosso)
+	internal 0x0200060A RemoveAll()				// Svuota la lista
+	internal 0x0200060B At(uint) : uint			// Torna l'indice del sito alla posizione specificata
+	internal 0x0200060C SetFlag(uint)			// Impostazione flag da settare per tutti i siti in lista
+	internal 0x0200060D AllFlags() : uint		// Torna l'or binario dei flags di tutti i siti in lista
+	internal 0x0200060E contains(uint) : bool	// Test user presente in lista
+endobject
+\end{lstlisting}
+	
 %----------------------------------------------------------------------------------------
 %
 %----------------------------------------------------------------------------------------
@@ -91,13 +233,13 @@ We already see some callback funtions like \textcolor{blue}{onApplicationStart()
 %
 %------------------
 \subsection{Movement functions}
-In the documentation we can find some functions, e.g. \textcolor{blue}{agvAddWayPoint(), agvMoveToWayPoint(), AgvRegisterMoveTo()}, to define the movement ways and methods as well as some constants.
+In the documentation we can find some functions, e.g. \textcolor{blue}{agvMoveToWayPoint(), AgvRegisterMoveTo()}, etc. to define the movement destination as well as the path \textcolor{blue}{agvAddWayPoint()}, and some constants.
+
 Constants related to this category of functions begin with \textcolor{blue}{MoveResult\_} or \textcolor{blue}{EsitoMov\_}, some of these constants are self-explanatory, e.g. \textcolor{blue}{MoveResult\_WaypointReached, MoveResult\_CompletedMovement }.
 
-more...........
-\begin{itemize}
-	\item AgvRegisterMoveTo()
-\end{itemize}
+For example if we want to give the final destination without caring about the path we can call \textcolor{blue}{AgvRegisterMoveTo()} in the callback function \textcolor{blue}{onExpandMacro()} giving to it a input the destination point and agvManager build the path automatically. The path may be recalculated every time \textcolor{blue}{onExpandMacro()} is called, depending on the state of the plant and other Agvs.
+
+If we want to build the path we can use \textcolor{blue}{agvAddWayPoint()} and \textcolor{blue}{agvMoveToWayPoint()}. We register different macros as the way point. We can build the path by waypoints when we compile the macro list, in registerMission and registerMovement. Then the motion is executed in \textcolor{blue}{onExpandMacro()} by calling \textcolor{blue}{agvMoveToWayPoint()}.
 
 %------------------
 %
@@ -124,12 +266,13 @@ To get a list of all micro type search in the documentation the prefix "{MIC\_}"
 
 \begin{itemize}
 	\item agvUserExists(uint uCode) : return true if a generic point, user point or cross exist.
-	\item siteExists(uint uCode) : return true if the USER point exists.
+	\item siteExists(uint uCode) : return true if the site (USER or CBat point) exists.
 	\item agvGetSiteInfo(uint userId, xSiteInfo \&sInfo): get information about USER point with id userId.
 	\item SetSiteText(uint userId, string text) : set a text to shown on the user point on the map. e.g. SetSiteText(userId, "(" + row + ", " + col + ")").
 	\item SetSiteName(uint userId, string text) : set the name of the site, visible in the tooltip\\
 \end{itemize}
 
+We can associate two different kind of properties to a point: int or string. Properties can be used by the script as we wish.
 \begin{itemize}
 	\item SetIntProperty(uint, string, int)
 	\item IntProperty(uint, string)
@@ -138,6 +281,16 @@ To get a list of all micro type search in the documentation the prefix "{MIC\_}"
 	AddIntProperty(i, PROP_ASSIGNED_AGV, "Assigned agv", ACCESS_INST, XSitePropertyFlg_volatile)
 	\end{lstlisting}
 \end{itemize}	
+
+%------------------
+%
+%------------------
+\section{Creating functions and objects}
+Functions are useful to divided our logic and simplify the program. The keyword code is used to create functions.
+Use the keyword Forward, if you want to use the fucntion in another function that you implemented before it. It is like the prototype of the function in C language.
+ 
+Objects are like classes in object oriented programming. Objects can be created by using object and endobjects.
+Classes have a constructor function, that is called when the class is instanciated, when the the object is created from the class.
 
 %----------------------------------------------------------------------------------------
 %
@@ -548,10 +701,29 @@ Qt creator
 %
 %------------------
 \subsection{Semaphores}
-AgvGetSemaphoreRequestMask
-AgvSetGreenSemaphore
+A semaphore can be only set to green by the script. A semaphore is set to red when all Agvs leave the area of the semaphore.
 
+per quanto riguarda i semafori, come si fa ad associare l'agv alla richiesta? in AgvSetGreenSemaphore(uint , bool) il primo parametro e' il codice di startSemeforo, non c'e' il numero dell'agv.
 
+Marco, 
+8:40 PM Una volta che il semaforo è verde lo è per tutti gli agv
+
+8:52 PMAgvGetSemaphoreRequestMask(uint semaphoreStartId) : uint	// Ritorna stato richiesta semaforo. Torna la maschera degli agv che stanno chiedendo il semaforocome fai a settare i bit della maschera?
+
+Marco, 
+9:06 PMLi setta AgvManager quando degli agv stanno aspettando di passare per l'area del semaforoServe che il percorso di un agv incroci l'area del semaforo, e che l'agv sia nelle vicinanze del semaforo stesso: in pratica la maschera viene impostata quando il semaforo sta bloccando il movimento dell'agvOvviamente serve anche che venga chiamata una funzione di esecuzione movimentoViene anche impostata se ad esempio un operatore porta l'agv in manuale di emergenza dentro l'area di pertinenza del semaforo, o se all'avvio del software un agv si trova già dentro l'area.
+
+\begin{lstlisting}[caption= Semaphores functions and constants]
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;	Gestione semafori
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$define XSemaforo_nonesiste -1
+$define XSemaforo_rosso 0
+$define XSemaforo_verde 1
+AgvGetSemaphoreRequestMask(uint semaphoreStartId) : uint			// Ritorna stato richiesta semaforo. Torna la maschera degli agv che stanno chiedendo il semaforo
+AgvSetGreenSemaphore(uint semaphoreStartId, bool)					// Imposta conferma via libera semaforo con id semaphoreStartId
+AgvGetSemaphoreColour(uint semaphoreStartId) : int					// Torna colore semaforo con id semaphoreStartId
+\end{lstlisting}
 
 %----------------------------------------------------------------------------------------
 %		Storage example
@@ -598,20 +770,26 @@ We can figure out other mission, but for this example these missions are enough.
 	$define MIS_EMPTY_TROLLEY_FROM_UNLOAD		6		// Go take an empty trolley from unload area
 	$define MIS_PUT_EMPTY_TROLLEY_ON_STORE		7		// Agv has an empty trolley, put it on store
 	
+	$define MIS_LOAD_ONLY						10
+	$define MIS_UNLOAD_ONLY						11
 	$define MIS_TO_BATTERY_CHARGE				12
 	$define MIS_TO_HOME							13
+	$define MIS_TO_POINT						14
 \end{lstlisting}
 
 The main logic of assigning missions will be implemented in the function \textcolor{blue}{onNextMission()}. After assigning a mission a macro list have to be compiled, and it will be done in another function, called from \textcolor{blue}{onNextMission()}.
 
+%------------------
+%
+%------------------
 \subsection{onNextMission()}
-Have a look on the main loop execution, fig.\ref{fig:mainLoop} to get an idea about when the callback function is called or read the documentation. Now let's assign some mission to the agv.
+Have a look on the main loop execution, fig.\ref{fig:mainLoop} to get an idea about when the callback function is called or read the documentation. Now let's assign some mission to the agv.\\
 
-First let's read state of the AGV by calling \textcolor{blue}{AgvGetVehicleInfo(uAgv, @agvInfo)} where \textcolor{red}{uAgv} the Agv index and \textcolor{red}{agvInfo} is a \textcolor{red}{XVehicleInfo}. From the variable \textcolor{red}{agvInfo} we can get information about the battery capacity of the Agv, the status of the Agv, etc.
+First let's read the state of the AGV by calling \textcolor{blue}{AgvGetVehicleInfo(uAgv, @agvInfo)} where \textcolor{red}{uAgv} is the Agv index and \textcolor{red}{agvInfo} is a \textcolor{red}{XVehicleInfo}. From the variable \textcolor{red}{agvInfo} we can get information about the battery capacity of the Agv, the status of the Agv, etc.\\
 
 We have to check if the Agv have enough power to execute a mission, and if the Agv have a pallet (UDC) on board or not, if it have a pallet, it is empty or have some product?
-Let's define two flags in the agv flag status, \textcolor{red}{agvInfo.uStatus}. One to determine if the full pallet on the agv come from the store or from the loading area? For example $\textcolor{red}{agvflg_ProductGoingOutOfStore=TRUE}$ then it is a pallet that come out from the store and should go to unloading area, otherwise if equal false, it come the loading area and have to go to the store.
-The other flag to determine if the pallet is empty or not, $\textcolor{red}{agvflg_ProductOnPallet}$.
+Let's define two flags in the agv flag status, \textcolor{red}{agvInfo.uStatus}. One to determine if the full pallet on the agv come from the store or from the loading area? For example $\textcolor{red}{agvflg\_ProductGoingOutOfStore=TRUE}$ then it is a pallet that come out from the store and should go to unloading area, otherwise if equal false, it come the loading area and have to go to the store.
+The other flag to determine if the pallet is empty or not, $\textcolor{red}{agvflg\_ProductOnPallet}$.
 
 \begin{lstlisting}
 	// user defined vehicle status flags
@@ -638,45 +816,285 @@ Then let's defined some boolean variables that will help in the decision and sel
 	
 \end{lstlisting} 
 
-Depending on the value of these variables we can assign mission to Agv. For example if the agv have a full pallet on board and that pallet come out from the store, it should go to the unloading area.
+Depending on the value of these variables we can assign mission to Agv. For example if the agv \textit{have a full pallet on board and that pallet come out from the store, it should go to the unloading area}.
 \begin{lstlisting}[caption= Mission to unloaing area]
-		if (takeOutToilet)
-			OnNextMissionDebugMessage(uAgv, "takeOutToilet=T : <font color=green>assign mission MIS_TAKE_TOILET_TO_UNLOAD</font>")
-			return RegisterMission(uAgv, MIS_TAKE_TOILET_TO_UNLOAD)
-		endif
+if (takeOutToilet)
+	OnNextMissionDebugMessage(uAgv, "takeOutToilet=T : <font color=green>assign mission MIS_TAKE_TOILET_TO_UNLOAD</font>")
+	return RegisterMission(uAgv, MIS_TAKE_TOILET_TO_UNLOAD)
+endif
 \end{lstlisting}
 
 The function \textcolor{blue}{OnNextMissionDebugMessage()} is used to show debugging message in  \textcolor{red}{the vehicle information [F3]} tab.\\
 
-If the Agv have a full pallet and the pallet doesn't come out from the store, it come from the loading are, the agv have to take the pallet to the store:
+If the Agv \textit{have a full pallet and the pallet doesn't come out from the store, it come from the loading are}, the agv have to take the pallet to the store:
 
 \begin{lstlisting}[caption= Mission take full pallet into store]
-	if (toiletOnTrolley)
-		int storePosition
-		// Find a position on the store where to put the trolley
-		storePosition = store_hnd.positionForTakeInTrolley(uAgv, true)
-		if (not SiteExists(storePosition))
-			OnNextMissionDebugMessage(uAgv, "toiletOnTrolley=T : <font color=red>position in store not found</font>")
-			return MIS_NULL
-		endif
-		OnNextMissionDebugMessage(uAgv, "toiletOnTrolley=T, storePosition=" + storePosition + " : <font color=green>assign mission MIS_PUT_TOILET_TO_STORE</font>")
-		return RegisterMission(uAgv, MIS_PUT_TOILET_TO_STORE, storePosition)
+if (toiletOnTrolley)
+	int storePosition
+	// Find a position on the store where to put the trolley
+	storePosition = store_hnd.positionForTakeInTrolley(uAgv, true)
+	if (not SiteExists(storePosition))
+		OnNextMissionDebugMessage(uAgv, "toiletOnTrolley=T : <font color=red>position in store not found</font>")
+		return MIS_NULL
 	endif
+	OnNextMissionDebugMessage(uAgv, "toiletOnTrolley=T, storePosition=" + storePosition + " : <font color=green>assign mission MIS_PUT_TOILET_TO_STORE</font>")
+	return RegisterMission(uAgv, MIS_PUT_TOILET_TO_STORE, storePosition)
+endif	
+\end{lstlisting}
+
+If we look at the code again without the debugging info, it is simple. First we choose a position in the store where to go, then we assign the mission take trolley to the position chosen in the store.
+
+\begin{lstlisting}[caption= Mission take full trolley to a postion in the store]
+if (toiletOnTrolley)
+	int storePosition
+	// Find a position on the store where to put the trolley
+	storePosition = store_hnd.positionForTakeInTrolley(uAgv, true)
+	//check if postion exist or storePosition <> (-1), register mission.
+	return RegisterMission(uAgv, MIS_PUT_TOILET_TO_STORE, storePosition)
+endif
+\end{lstlisting} 
+
+As we see the logic to assign Missions should not be complicated. Once missions are identified, it is enough to assign them to Agv without caring about the details of a mission. To do so, we call a user defined function \textcolor{blue}{ RegisterMission(uAgv, uMission, iPar1, iPar2)}, or any number of parameters we need. The detail about mission step (MACROs) are implemented in the function \textcolor{blue}{registerMission}.
+
+Until now we assign 2 missions \textcolor{red}{MIS\_TAKE\_TOILET\_TO\_UNLOAD} and  \textcolor{red}{MIS\_PUT\_TOILET\_TO\_STORE}, depending on the conditions \textit{takeOutToilet} and \textit{toiletOnTrolley}.
+
+Pay attention to the sequence of implementing the functions or to the conditions. It is better to write if (toiletOnTrolley and not takeOutToilet) then writing if (toiletOnTrolley), in this way we don't care about the sequence of writing the conditions.
+
+
+
+%------------------
+%
+%------------------
+\subsection{Macros}
+Once missions are defined, we have to defined MACROs. First take a look at macros defined by AgvManager.
+
+\begin{lstlisting}[caption= MACRO defined in AgvManager]
+; Definizione codici macro
+$define MAC_NULL             0
+$define MAC_MOVE_TO_USER     1
+$define MAC_MOVE_TO_XY       2
+$define MAC_CHARGE_BATT      3
+$define MAC_CHARGE_STOP      4
+$define MAC_LOAD             5
+$define MAC_UNLOAD           6
+$define MAC_END              7
+$define MAC_MOVE_AND_LOAD    8
+$define MAC_MOVE_AND_UNLOAD  9
+\end{lstlisting}
+
+If other macros are needed we can define also ours.
+
+\begin{lstlisting}[caption= MACRO defined by user]
+	// Movement to waypoint
+	$define MAC_MOVE_TO_WP					100
+	// Wait for the amount of seconds specified in par1
+	$define MAC_WAIT_S						101
+	// Load a trolley from the point defined by par1
+	// par2 is true if there is a toilet on the trolley
+	$define MAC_LOAD_TROLLEY				102
+	// Unload a trolley on the point defined by par1
+	$define MAC_UNLOAD_TROLLEY				103
+	
+	// Wait for the operator to load toilet on agv
+	$define MAC_WAIT_TOILET					200
+	// Decide the unloading point where the toilet will be unloaded
+	$define MAC_TAKE_TOILET_TO_UNLOAD		201
+	// Decide where to take an emty trolley: whether to load station or to store
+	$define MAC_DECIDE_EMPTY_TROLLEY_DEST	202
 	
 \end{lstlisting}
 
+To define Macros, we go back to the list of missions, and write the detail of the missions. Once again without too much detail, becuase the instructions and operations sent to and received from agv are handled by MICROs.
+For our example we can assign the following macros to each mission. Usually this is done in register mission, or a fucntion called from onNextMission().
 
-\subsection{Macros}
+\begin{itemize}
+\item MIS\_LOAD\_TOILET\_FROM\_STATION	1
+	\begin{itemize}
+		\item MAC\_MOVE\_TO\_WP , move to station user point
+		\item MAC\_WAIT\_TOILET , wait loading toilet, wait for signal load ok
+		\item MAC\_END
+	\end{itemize}
+\item MIS\_PUT\_TOILET\_TO\_STORE		2
+	\begin{itemize}
+		\item MAC\_MOVE\_TO\_WP , move to the store position
+		\item MAC\_UNLOAD\_TROLLEY , unload trolley
+		\item MAC\_MOVE\_TO\_WP , go out from store
+		\item MAC\_END , end macro
+	\end{itemize}
+\item MIS\_LOAD\_TOILET\_FROM\_STORE	3
+	\begin{itemize}
+		\item MAC\_MOVE\_TO\_WP 
+		\item MAC\_LOAD\_TROLLEY
+		\item MAC\_MOVE\_TO\_WP 
+		\item MAC\_END
+	\end{itemize}
+\item MIS\_LOAD\_EMPTY\_TROLLEY\_FROM\_STORE 4
+	\begin{itemize}
+		\item MAC\_MOVE\_TO\_WP 
+		\item MAC\_LOAD\_TROLLEY
+		\item MAC\_MOVE\_TO\_WP 
+		\item MAC\_END
+	\end{itemize}
+\item MIS\_TAKE\_TOILET\_TO\_UNLOAD 5
+	\begin{itemize}
+		\item 
+		\item MAC\_MOVE\_TO\_WP 
+		\item MAC\_TAKE\_TOILET\_TO\_UNLOAD
+		\item
+	\end{itemize}
+\item MIS\_EMPTY\_TROLLEY\_FROM\_UNLOAD 6
+	\begin{itemize}
+		\item MAC\_MOVE\_TO\_WP
+		\item MAC\_LOAD\_TROLLEY
+		\item MAC\_MOVE\_TO\_WP
+		\item MAC\_DECIDE\_EMPTY\_TROLLEY\_DEST
+	\end{itemize}
+\item MIS\_PUT\_EMPTY\_TROLLEY\_ON\_STORE 7
+	\begin{itemize}
+		\item MAC\_MOVE\_TO\_WP , move to the store position
+		\item MAC\_UNLOAD\_TROLLEY , unload trolley
+		\item MAC\_MOVE\_TO\_WP , go out from store
+		\item MAC\_END , end macro
+	\end{itemize}
+\end{itemize}
 
-\subsection{Creating objects}
+Once MACROs are assigned to missions, we have to assign MICROs to MACROs. This is may be done in onExpandMacro(). Remember that when onExpandMacro() return true, mean the execution of the current macro is concluded, and the next macro in the list will be expanded (executed) on the next call of onExpandMacro(), of course if the current macro is not the last one in the list.
 
-\subsection{FIFO logic}
+We can also end a mission and begin another one from onExpandMacro(). We don't have to do it always in onNextMission(). But keep in mind that the program should be linear and simple. Avoid \textit{spaghetti code} when is possible.
+
+When a macro is exapnaded we can see the result in vehicle information[F3], fig.\ref{figmacroexp}.
+
+\begin{figure}
+	\centering\includegraphics[scale=0.5]{agvmanager/agvManager/microDebug}
+	\caption{Macro expansion and micro details}
+	\label{figmacroexp}
+\end{figure}
+%------------------
+%
+%------------------
+\subsection{Micros and Operations}
+Micros are low level set of instructions. The following listing.\ref{lstMIC} show the different categories of micro instructions or operations defined by AgvManager. 
+
+\begin{lstlisting}[caption= Different catergory of MIC defined in AgvManager, label=lstMIC]
+// Definizione codici micro
+$define MIC_NULL              0
+$define MIC_MOVE              1 // M command, agvregisterMove****
+$define MIC_CURVE             2 // M command
+$define MIC_ROTATION          4 // M command
+$define MIC_OPERATION         5 // O command, agvregisterOperation()
+$define MIC_SYSTEM            6 //   command are not sent to vehicle, agvregistersystembloccante(), agvregistersystempassante()
+$define MIC_PASSANTE          7 // P command, agvregisterPassante()
+$define MIC_WAIT              8 // W command, agvregisterWait()
+$define MIC_MOVING_OPERATION  9 // Q command, agvregisterMovingOperation()
+
+\end{lstlisting}
+
+The following are MICROs defined by AgvManger.
+
+\begin{lstlisting}[caption= MICRO and OPERAIONS defined by AgvManager]
+// Definizione codici operazioni
+$define O_LOAD          2
+$define O_UNLOAD        3
+$define O_CHARGE        4
+$define O_CHARGE_START  1
+$define O_CHARGE_STOP   2
+
+// Definizione codici micro System
+$define S_NULL          0	// Serve (ad esempio) a spezzare le MIC_MOVE
+$define S_END           1
+$define S_CHARGE_WAIT   3
+$define S_CHARGE_START  4
+$define S_CHARGE_STOP   5
+$define S_CONCAT_MACRO  8	// Concatena immediatamente la macro successiva
+\end{lstlisting}
+
+We can define are own Micros and operations. Try to follow the naming style of AgvManager. Begin with the prefix O\_ for Operation category, with S\_ for System category.
+
+\begin{lstlisting}[caption= MICRO and OPERAIONS defined by user]
+//	Micro SYSTEM
+$define S_START_WAIT		100
+$define S_EXEC_WAIT			101
+
+//	Micro OPERATION
+// Wait toilet on agv
+$define O_WAIT_TOILET		5
+\end{lstlisting}
+
+Micros form category MIC\_OPERATION, MIC\_SYSTEM, MIC\_PASSANTE, MIC\_WAIT are assigned in onExpandMacro(), using one of the following functions:
+\begin{lstlisting}
+	AgvRegisterPassante()
+	AgvRegisterWait()
+	AgvRegisterSystemPassante()
+	AgvRegisterSystemBloccante()
+\end{lstlisting}
+
+Micros that belong to MIC\_MOVE, MIC\_CURVE, MIC\_ROTATION are assigned by AgvMoveTo****() functions.
+
+Micro execution is done in onExecuteMicro(), for example:
+
+\begin{lstlisting}
+case MIC_SYSTEM
+	case S_END
+		; End of mission
+		AgvStopMission(uAgv)
+		SetAgvMessage(uAgv, "")
+		break
+		
+	case S_START_WAIT
+	// start timer. Not locking micro
+		timerWait[uAgv] = timeoutS(iPar1)
+		break
+	
+	case S_EXEC_WAIT
+	// wait a timer to finish counting. locking micro
+		if (isTimeout(timerWait[uAgv]))
+			return true
+		else
+			MultiMessageState(uAgv, "Agv " + (uAgv + 1) + " : wait " + int(secsToTimeout(timerWait[uAgv])) + "s")
+		return false
+		endif
+		break
+	
+	case S_WAIT_INPUT
+	// wait a signal from plc. locking micro
+		if ( AgvGetInput(INP_LOAD_TERMITAED) =false )
+			return true
+		else
+			return false
+		endif
+
+\end{lstlisting}
+
+Keep in mind that when a micro terminate, onExecuteMicro() should return true. For example, if we are waiting for a signal to be false, and the signal is true, onExecuteMicro() return false, in this way the next micro will be the current one.
+When the signal become false, onExecuteMicro() return true and the execution of the current micro terminate.
+
+When bLastCall will be set to true? at the next execution or immediately, and the effective termination will be at the next call?
+
+For example if we register a micro from the category Operation, AgvManager will send some command to the vehicle. When the vehicle answer with operation concluded, AgvManager will set bLastCall to true, in this way we can terminate the micro execution.
+
+From AgvManager we can send command to agv from the interpreter box. For example the operation command structure is: [Occccmmmm,type,p1,p2,p3,p4]. For example [O\textcolor{blue}{0001}\textcolor{red}{0003},1,0,0,0,0], fig.\ref{fig:operationCmd}, we send to Agv an operation command [O], with operation number 1 and mission number 3.
+
+\begin{figure}
+	\centering\includegraphics[scale=0.4]{agvmanager/agvManager/operationCmd}
+	\caption{Commands insertion}
+	\label{fig:operationCmd}
+\end{figure}
+
+Details about mission, macro and micro execution can be seen in the tab vehicle informations[F3]. 
+
+%------------------
+%
+%------------------
+\subsection{Store handling}
+In a matrix store, or stack, products can be taken out following the logic of First in First out (FIFO) or Last in First out(LIFO), etc.
+
+We can define some objects to handle the store, keep in memory the products in the store and track them, and also some algorithm to take out or take in products.
 
 
 %----------------------------------------------------------------------------------------
 %
 %----------------------------------------------------------------------------------------
-\section{Ex 0: More than one AGV}
+
 
 
 

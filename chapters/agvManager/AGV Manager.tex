@@ -114,7 +114,7 @@ Properties assigned by the function \textit{AddIntProperty()}, are shown in the 
 \end{figure}
 
 \section{AGV script executing}
-AGV manager can be compared to a plc (hardware and firmaware) and the script to a plc program. The firmware is the same in all plant (beside updates and new functionality) and the script change from plant to another.
+AGV manager can be compared to a plc (hardware and firmware) and the script to a plc program. The firmware is the same in all plant (beside updates and new functionality) and the script change from plant to another.
 
 AGV scripts are written in Xscript language. Xscript have some OOP properties (creating classes and objects), some event handling (mouse move event) and callback functions.
 
@@ -160,9 +160,11 @@ More about MICRO and operations later and the commands sent to the agv in order 
 
 \subsection{Main loop execution}
 The following is a simplified explanation of the main loop of and AGV script, which is in execution behind the scene. A more complex scenario is shown in fig.\ref{fig:mainLoop}.
-When the script is executed the first time, the function OnApplicationStart() is called. In this function you can initialize some variables and set some parameters. After that AgvManager wait for events e.g. mouse events, or operating mode change. And continue to execute some other functions.
+When the script is executed the first time, the function \textcolor{blue}{OnApplicationStart()} is called. In this function you can initialize some variables and set some parameters. After that AgvManager wait for events e.g. mouse events, or operating mode change. And continue to execute some other functions.
 
-Let's see a simple case. The AGV is in automatic mode (MOD\_AUTOMATIC), and there is no mission in progress. If the AGV is enabled, AgvManager call automatically the callback function \textit{onNextMission()}, where the programmer have implemented a logic to register the next mission to be executed. When a mission is in progress, AgvManager wait (wait doesn't mean stop script execution) till the end of the mission in order to call again onNextMission().
+In the case we have more than one Agv, the execution of the functions is sequential. This mean that the set of functions of Agv 1 are called first, then those of Agv 2, then Agv 3, etc. In other words, the flowchart in fig.\ref{fig:mainLoop} and fig.\ref{fig:missionExec} are executed starting from the first Agv until the last in sequence, this flow is repeated always.
+
+Let's see a simple case. The AGV is in automatic mode \textcolor{blue}{(MOD\_AUTOMATIC)}, and there is no mission in progress. If the AGV is enabled, AgvManager call automatically the callback function \textcolor{blue}{onNextMission()}, where the programmer have implemented a logic to register the next mission to be executed. When a mission is in progress, AgvManager wait (wait doesn't mean stop script execution) till the end of the mission in order to call again \textcolor{blue}{onNextMission()}.
 
 \begin{figure}
 	\centering\includegraphics[scale=0.5]{agvmanager/mainloop}
@@ -172,14 +174,14 @@ Let's see a simple case. The AGV is in automatic mode (MOD\_AUTOMATIC), and ther
 
 \subsection{Mission execution}
 A mission is a set of MACROs. There is a list of MACROs, where the order of execution is assigned.
-A mission can be assigned by a call to \textit{onNextMission()}, and started by calling \textit{AgvStartMission()}.
+A mission can be assigned by a call to \textcolor{blue}{onNextMission()}, and started by calling \textcolor{blue}{AgvStartMission()}.
 If the list of MACROs is not empty, the effective execution of the mission begin otherwise the old MICRO continue to execute until the end.
 
-We take only one case, if the MACRO list is not empty, the function \textit{onExpandMacro()} is called by AgvManager.
-Then \textit{onExecuteMicro()} is called until the end of the MICRO execution. At the last call of \textit{onExecuteMicro()} the paramater \textit{bLastCall} is assigned to true.
+We take only one case, if the MACRO list is not empty, the function \textcolor{blue}{onExpandMacro()} is called by AgvManager.
+Then \textcolor{blue}{onExecuteMicro()} is called. At the last call of \textcolor{blue}{onExecuteMicro()} the paramater \textcolor{blue}{bLastCall} is assigned to true.
 
 Fig.\ref{fig:missionExec} show a flow chart about the mission execution.
-That is a single step of the mission. We have to imagine that AgvManager continue to call every function like a plc, cyclically.
+That is a single step of the mission. We have to imagine that AgvManager continue to call the flowchart like a plc, cyclically.
 
 \begin{figure}
 	\centering\includegraphics[scale=0.5]{agvmanager/missionExec}
@@ -286,9 +288,9 @@ Then the macro MAC\_END that end our mission is add to the macro's list.
 \lstinputlisting[language=c++, firstline=279, lastline=310, caption=OnAgvDroppedToPoint implementation. This function\, as input\, have the AGV id and the destination point id. This is an evznt function\, it is called when the user drag and drop the vehicle to the desired point, label=lbl:OnAgvDroppedToPoint]{listing/agvDropToPoint_v0.xs}
 
 \subsubsection{OnExpandMacro()}
-As we mentioned before, when a mission begin the function OnExpandMacro() is called automatically by AgvManager. We already started a mission in the function  OnAgvDroppedToPoint() and filled the MACRO list with 2 MACROs. So now we have to implement the function OnExpandMacro().
+As we mentioned before, when a mission begin the function \textcolor{blue}{OnExpandMacro()} is called automatically by AgvManager. We already started a mission in the function  \textcolor{blue}{OnAgvDroppedToPoint()} and filled the MACRO list with 2 MACROs. So now we have to implement the function OnExpandMacro().
 
-AgvManager executes the MACROs starting from the first one in the list. When it call the function OnExpandMacro(), give it the Agv id, mision id, MARCO code/id and the four parameters stored in the list. We can imagine every elements of the list, is composed from those fields. So in the implementation of this function we check the MACRO code to be executed. We can use the case statement or the if in order to select our logic.
+AgvManager executes the MACROs starting from the first one in the list. When it call the function \textcolor{blue}{OnExpandMacro()}, give it the \textcolor{red}{Agv id}, \textcolor{red}{mision id}, \textcolor{red}{MARCO code/id} and the four parameters stored in the list. We can imagine every elements of the list, is composed from those fields. So in the implementation of this function we check the MACRO code to be executed. We can use the case statement or the if in order to select our logic.
 
 The first MACRO is MAC\_MOVE\_TO\_WP. Under the case MAC\_MOVE\_TO\_WP we implement the instructions to AgvManager:
 
@@ -309,19 +311,21 @@ The first MACRO is MAC\_MOVE\_TO\_WP. Under the case MAC\_MOVE\_TO\_WP we implem
 		return true
 \end{lstlisting}
 
-In this code the motion instruction is done by calling \textit{AgvMoveToWayPoint()}, when this function return a value corresponding to \textit{MoveResult\_WaypointReached}, the next MACROs is expanded. The next MACRO in the list is the end MACRO.\\
+In this code the motion instruction is done by calling \textcolor{blue}{AgvMoveToWayPoint()}, when this function return a value corresponding to \textcolor{blue}{MoveResult\_WaypointReached}, the next MACRO is expanded. The next MACRO in our example list is the \textcolor{blue}{END\_MACRO}.
+
+\textit{When the return value of \textcolor{blue}{OnExpandMacro()} is \textcolor{red}{true}, it mean the current macro execution is terminate, and on the next call the following macro will be executed.} 
 
 As we say every MACRO consist of different MICROs. A MACRO that correspond to a motion have a MIC\_MOVE. Here the MIC\_MOVE is registered by the call of the movement function \textit{AgvMoveToWayPoint()}.
 
 The MAC\_END register a MIC\_SYSTEM micro type. When the MAC\_END is expanded, it start or register a new micro. Simply this MACRO have only one MIC\_SYSTEM micro type that is S\_END.
 
-This MICRO inform AgvManager that the mission is ended. In the case MAC\_END the micro S\_END is registered by calling \textit{AgvRegisterSystemBloccante(uAgv, uMission, S\_END)}, where the fucntion \textit{agvStopMission(uagv)} is called, as we will see in the function \textit{onExecuteMicro()}.\\
+This MICRO inform AgvManager that the mission is ended. In the case MAC\_END the micro S\_END is registered by calling \textit{AgvRegisterSystemBloccante(uAgv, uMission, S\_END)}, where the function \textit{agvStopMission(uagv)} is called, as we will see in the function \textit{onExecuteMicro()}.\\
 
 As shown in fig.\ref{fig:missionExec}, AgvManager continue to call onExpandMacro() and onExcecuteMicro().
 
-When the onExpandMacro() terminate the function onExcecuteMicro() is called.\\
+When the \textcolor{blue}{onExpandMacro()} terminate the function onExcecuteMicro() is called.\\
 
-In the tab \textit{vehicle informations[F3]}, under Agv commands we can se a list of missions, macros expansion and micro instructions, as well as informations about them, fig.\ref{fig:macro_expansion_1}, fig.\ref{fig:macro_expansion_2} and fig.\ref{fig:macro_expansion_3}.\\
+In the tab \textcolor{red}{vehicle informations[F3]}, under Agv commands we can se a list of missions, macros expansion and micro instructions, as well as information about them, fig.\ref{fig:macro_expansion_1}, fig.\ref{fig:macro_expansion_2} and fig.\ref{fig:macro_expansion_3}.\\
 
 \begin{figure}
 	\centering\includegraphics[scale=0.7]{agvmanager/agvManager/macro_expansion_1}
@@ -345,7 +349,7 @@ In the tab \textit{vehicle informations[F3]}, under Agv commands we can se a lis
 
 MICROs are instructions to the vehicle. MICROs are stored in a list, one MACRO can register more than one MICRO fig.\ref{fig:macro_expansion_1}.
 
-For example a MICRO can be registered by calling \textit{agvRegisterSystemBloccante()} or  \textit{agvRegisterSystemPassante()} for MIC\_SYSTEM type or \textit{AgvRegisterOperation()} for MIC\_OPERATION type. See documentation for a more complete list of micro registration functions.
+For example a MICRO can be registered by calling \textcolor{blue}{agvRegisterSystemBloccante()} or  \textcolor{blue}{agvRegisterSystemPassante()} for MIC\_SYSTEM type or \textcolor{blue}{AgvRegisterOperation()} for MIC\_OPERATION type. See documentation for a more complete list of micro registration functions.
 These function have uAgv, uMission, MICROcode as input parameters.
 
 There are different types of MICROs, that can be found in the documentation with prefix MIC\_. Let's see MIC\_SYSTEM to which the S\_END belong, this type of MICRO doesn't send any instruction to the agv itself. For example S\_END is need to end a mission, and is managed by AgvManager.\\
@@ -365,9 +369,10 @@ A MIC\_MOVE type is related to instruction of motion sent to the agv. A MIC\_OPE
 There are 2 kinds of micros: blocking and non-blocking MICROs. The difference is that the blocking MICRO lock the execution of other micros till the end of the execution of itself or till the verification of a condition. \\
 
 When expanding macros, the micro list is composed by calling the relative registration function.
-For example, in the function \textit{OnExpandMacro()} under the MAC\_END, we register a blocking system micro, S\_END.
-In the function \textit{onExecuteMicro()} under the case MIC\_SYSTEM and under the case S\_END we call the function \textit{AgvStopMission(uAgv)} in order to stop the mission.
-When the mission is stopped, the micro terminate, and eventually other micros can start. When a micro terminate the execution of the function \textit{onExecuteMicro()} return true. \\
+For example, in the function \textcolor{blue}{OnExpandMacro()} under the MAC\_END, we register a blocking system micro, S\_END.
+In the function \textcolor{blue}{onExecuteMicro()} under the case MIC\_SYSTEM and under the case S\_END we call the function \textcolor{blue}{AgvStopMission(uAgv)} in order to stop the mission. When a micro terminate the execution of the function \textcolor{blue}{onExecuteMicro()} return true. \\
+
+When the mission is stopped the macro list is eliminated, and the agv is ready to get another mission. 
 
 \lstinputlisting[language=c++, firstline=217, lastline=277, caption=OnExecuteMicro, label=lbl:OnExecuteMicro]{listing/agvDropToPoint_v0.xs}
 
@@ -436,6 +441,7 @@ After the call of \textcolor{blue}{onExpandMacro()} the callback function \textc
 		break
 \end{lstlisting}
 
-The state of mission execution is monitored cyclically. This mean that when a mission begin the functions \textcolor{blue}{onExpandMacro()} and \textcolor{blue}{onExecuteMicro()} are called repeatability until the end of the mission, see fig. \ref{fig:missionExec}.
+The state of mission execution is monitored cyclically. This mean that when a mission begin the functions \textcolor{blue}{onExpandMacro()} and \textcolor{blue}{onExecuteMicro()} are called repeatedly until the end of the mission, see fig. \ref{fig:missionExec}.
+The \textcolor{blue}{onExpandMacro()} start executing the following macro in the list, when the previous returned true. The following micro is executed when \textcolor{blue}{onExecuteMicro()} return true. the flag \textcolor{red}{bLastCall} is set to true by agvManager.
 
-The main logic of AGVs is written in the function \textcolor{blue}{onNextMission()}, where missions are assigned to AGV. When the logic is divided by missions, it is relativley easy to write the other 3 main fucntions : \textcolor{blue}{ registerMission(), onExpandMacro() and onExecuteMicro()}. Helper functions can be implemented to implement some useful logic.
+The main logic of AGVs is written in the function \textcolor{blue}{onNextMission()}, where missions are assigned to AGV. When the logic is divided by missions, it is relatively easy to write the other 3 main functions : \textcolor{blue}{ registerMission(), onExpandMacro() and onExecuteMicro()}. Helper functions can be implemented to implement some useful logic.
