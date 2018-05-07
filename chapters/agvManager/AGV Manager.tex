@@ -23,10 +23,21 @@ The installation of AgvManger is straightforward, like any program in Microsoft 
 
 In order to get the report from AgvManager a database should be installed. You can install MySql community version.
 
+Once installed, a schortcut to AgvManager and AgvConfigurator have to be done. In the properties of the application, in \textcolor{blue}{Start in} put the location of the folder where your projects are located, fig.\ref{fig:agvappproperties}.
+
+\begin{figure}
+	\centering\includegraphics[scale=0.5]{agvmanager/agvManager/agvappproperties}
+	\caption{Application properties: Change the "start in" field to your projects directory}
+	\label{fig:agvappproperties}
+\end{figure}
+
 \section{AGV configurator}
 
 AGV configurator is a standalone program that create a configuration file \textit{.fdoc} for AGV manager. From AgvConfigurator you can select the script to be executed by AgvManager fig.\ref{fig:refConfigScript}, select the map fig.\ref{fig:refConfigMap} and agv \ref{fig:refConfigAgv} and plc communication.
-Project folder should be placed in the the AgvManager folder, otherwise it will not work. The script file should be in the first level of the project folder, it can't be placed in subdirectories, for example "\textit{AgvManager/Project01/scripts/main.xs}" is not allowed.
+
+Project folder should be placed in the directory specified in the field \textcolor{blue}{Start in} of the application properties, otherwise it will not work. By default the start point of the application is its installation directory.
+
+The script file should be in the first level of the project folder, it can't be placed in subdirectories, for example \textcolor{red}{appStartDir/Project01/scripts/main.xs} is not allowed, it should be \textcolor{blue}{appStartDir/Project01/main.xs}.
 
 \begin{figure}
 	\centering\includegraphics[scale=0.5]{agvmanager/agvManager/agvConfigGeneral1}
@@ -35,7 +46,7 @@ Project folder should be placed in the the AgvManager folder, otherwise it will 
 \end{figure}
 \begin{figure}
 	\centering\includegraphics[scale=0.5]{agvmanager/agvManager/agvConfigMap}
-	\caption{AGV configurator. Map tab, where the \textit{.map} file is selected. In order to view the user point, you have to set the width and height of it, otherwise user points are not viewed.}
+	\caption{AGV configurator. Map tab, where the \textit{.map} file is selected. In order to view the user point, you have to set the width and height of it, otherwise user points are not viewed. It is convenient to represent user points as rectangles, not squares.}
 	\label{fig:refConfigMap}
 \end{figure}
 \begin{figure}

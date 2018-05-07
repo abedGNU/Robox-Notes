@@ -1,0 +1,173 @@
+
+ciao marco, gli indici non corrispondono.  carica in corso dovrebbe essere il terzo bit (bit 2)
+
+oppure gli indici negativi non corrispondono ai bit?
+
+Marco, 2:18 PM
+Gli indici (lato sinistro) si riferiscono alla visualizzazione su AgvManager, lato destro sono i flag del veicolo come li manda il veicolo
+
+2:55 PM
+
+rw sta per read write, e ro sta per read only?
+
+UDC sta per cosa?
+
+Marco, 3:42 PM
+rw, ro -> OK
+
+UDC = Unità Di Carico
+
+4:11 PM
+bVasiPieni vuol dire pallet carico, o trolley carico?
+
+Marco, 4:16 PM
+bVasiPieni = Carico presente dentro l'unità di carico
+
+4:27 PM
+
+corretto?
+
+Marco, 4:29 PM
+ - I flags non sono impostati da AgvManager ma comunicati direttamente dal veicolo
+
+Sono riservato solamente i primi 4 bit, possono essere impostati nel software R3 del veicolo
+
+ - Meglio sostituire "We can write information about the load on the vehicle" con "... about the status of the vehicle": è più generale, ad esempio nello stato può essere presente un bit che dice che le sicurezze sono state escluse, o che è in corso un rallentamento per un ostacolo vicino, l'unico limite è la fantasia
+
+4:36 PM
+mi rifersico alla funzione AgvSetAgvLoadInfo(,,,)
+la funzione non c'entra con la struct, la sposto.
+
+4:46 PM
+AddIntProperty(i, PROP_ASSIGNED_AGV, "Assigned agv", ACCESS_INST, XSitePropertyFlg_volatile)
+??
+
+
+Marco, 4:54 PM
+"The user" è "colui che scrive il software del veicolo" non lo script su AgvManager
+
+Puoi mettere un rimando a AgvSetLoadInfo()
+
+Le proprietà dei punti user te le spiego a voce quando torno in ufficio, ora sono a Liegi!
+
+
+per quanto riguarda i semafori, come si fa ad associare l'agv alla richiesta? in AgvSetGreenSemaphore(uint , bool) il primo parametro e' il codice di startSemeforo, non c'e' il numero dell'agv.
+
+Marco, 8:40 PM
+Una volta che il semaforo è verde lo è per tutti gli agv
+
+8:52 PM
+AgvGetSemaphoreRequestMask(uint semaphoreStartId) : uint			// Ritorna stato richiesta semaforo. Torna la maschera degli agv che stanno chiedendo il semaforo
+come fai a settare i bit della maschera?
+
+Marco, 9:06 PM
+Li setta AgvManager quando degli agv stanno aspettando di passare per l'area del semaforo
+
+Serve che il percorso di un agv incroci l'area del semaforo, e che l'agv sia nelle vicinanze del semaforo stesso: in pratica la maschera viene impostata quando il semaforo sta bloccando il movimento dell'agv
+
+Ovviamente serve anche che venga chiamata una funzione di esecuzione movimento
+
+Viene anche impostata se ad esempio un operatore porta l'agv in manuale di emergenza dentro l'area di pertinenza del semaforo, o se all'avvio del software un agv si trova già dentro l'area
+
+10:35 AM
+durante l'espansione di una Macro, se chiamo addmacro una o piu volte, dove vengono inserite le nuove macro? se chiamo un'altra missione, si annulla quella vecchia?
+
+Marco, 2:39 PM
+AddMacro() aggiunge la nuova macro in fondo alla coda esistente
+
+AgvStopMission() svuota la coda delle macro. Occhio che invece le micro non vengono toccate: è quindi possibile concatenare missioni senza fermare gli agv
+
+Tipicamente, per questo, in una macro si chiama AgvStopMission() seguito da (tipicamente) RegistraMissione()
+
+
+
+Nel capitolo 2.2 la frase "The main property of a vehicle is the dimension. The length and width can be set here." è fuorviante: in realtà le dimensioni usate da AgvManager sono quelle impostate nello script con AgvSetMapParams()
+
+
+Le dimensioni impostabili nel RAT servono solamente per la visualizzazione nel RAT stesso
+
+Nel capitolo 2.2.2 spiegherei che le proprietà dei segmenti di linea sono definite a partire dal punto precedente il segmento stesso
+
+¶2.2.4
+User kind: è un parametro al momento non usato, potrebbe esserlo in futuro
+Side: indica il lato dell'user sulla linea, è disponibile da script: ad esempio un agv potrebbe essere in grado di caricare/scaricare dai due lati, questo parametro dice da che lato si trova il punto USER
+
+¶2.2.6 Dì solamente che sono usato per agv a guida inerziale, il capitolo è troppo grosso!
+Richiede giorni di pratica ;-)
+
+¶2.2.8
+Divieti è una maschera di bit: i primi 4 si riferiscono ai 4 quadranti ed al passaggio da linea A a linea B, gli ultimi 4 al passaggio da linea B a linea A.
+Servono per definire dei sensi unici su una curva, o per impedire il passaggio per un quadrante: l'agv non se ne fa niente, AgvManager invece onora i divieti
+
+Mettere i divieti ad un guadrante può avere senso per fare prove senza modificare la mappa caricata sugli agv
+
+Override angle: imposta l'angolo dell'incrocio ad un valore differente da quello grafico auto calcolato. Se si impone un angolo, allora bisogna anche definire la tolleranza: se l'angolo auto calcolato e quello imposto hanno una differenza maggiore della tolleranza, allora RAT dà un errore in generazione mappa
+
+Scusa, il capitolo sui magneti è a posto... ero ancora immerso nel mondo degli IGV!
+
+
+
+
+Marco, 2:41 PM
+Sono solo problemi di emulazione!
+
+Se vuoi un'emulazione "coi fiocchi" prendi da OneDrive la versione 8.0.0-beta3 (la sto caricando or ora)
+
+2:43 PM
+ok
+in questo caso, non ho connession diretta fra le 2 linee orizontali, come faccio a impedire il passaggio tagliando le curve? In questo caso ha fatto una semicirconferenza, pero in realta non so se l'agv riecsce a farla..
+
+Marco, 2:46 PM
+Bisogna fare delle curve più corte, con un rfid nel mezzo...
+
+oppure permettere il passaggio solamente facendo un tratto di navigazione trasversale
+
+2:47 PM
+la distanza fra le due linee orizontali e' di 1100mm..
+
+Marco, 2:47 PM
+La mappa che avevo fatto in origine aveva le curve solo nei punti indispensabili, puoi giocare coi sensi unici...
+
+
+2:48 PM
+
+questa una mappa che voglio fare per testare meilin
+
+Marco, 2:52 PM
+vedo il problema...
+
+una soluzione potrebbe essere di forzare l'orientamento, in modo che l'agv non possa fare l'inversione
+
+tra l'altro forzare l'orientamento è cosa buona e giusta per evitare di girare il carico
+
+2:56 PM
+adesso ci guardo
+3:10 PM
+ciao, mi potresti inviare qualche progetto di agv?
+
+Marco, 5:34 PM
+Ciao Abed
+
+oltre ad una nuova versione (8.0.0-beta4) di AgvManager, ho messo due impianti in 
+Robox Smart Motion - MGV\20_Software tools\AgvManager\Sample AgvManager plants
+
+5:35 PM
+perfetto grazie
+in agv emulation, cos'e' il tab configuration?
+
+Marco, 5:39 PM
+Serve a definire la geometria del veicolo: quante ruote e come messe
+
+La geometria ed i limiti delle motoruote modificano la massima velocità che può essere percosa in curva...
+
+5:40 PM
+solo in emulazione?
+
+Marco, 5:41 PM
+Anche nella realtà, ma nella realtà la gestione avviene a bordo veicolo
+
+Con la nuova emulazione ho portato su AgvManager il software dell'agv
+
+5:41 PM
+non si possono modificare dal tab?
+niente trovato

@@ -1,0 +1,29 @@
+\BOOKMARK [-1][-]{part.1}{I AGV Manager}{}% 1
+\BOOKMARK [0][-]{chapter.1}{RAT: Robox Agv Tool}{part.1}% 2
+\BOOKMARK [1][-]{section.1.1}{RAT}{chapter.1}% 3
+\BOOKMARK [1][-]{section.1.2}{Map}{chapter.1}% 4
+\BOOKMARK [2][-]{subsection.1.2.1}{Vehicle}{section.1.2}% 5
+\BOOKMARK [2][-]{subsection.1.2.2}{Lines}{section.1.2}% 6
+\BOOKMARK [2][-]{subsection.1.2.3}{Generic point}{section.1.2}% 7
+\BOOKMARK [2][-]{subsection.1.2.4}{User point}{section.1.2}% 8
+\BOOKMARK [2][-]{subsection.1.2.5}{Battery point}{section.1.2}% 9
+\BOOKMARK [2][-]{subsection.1.2.6}{Magnet point}{section.1.2}% 10
+\BOOKMARK [2][-]{subsection.1.2.7}{Start point}{section.1.2}% 11
+\BOOKMARK [2][-]{subsection.1.2.8}{Cross}{section.1.2}% 12
+\BOOKMARK [1][-]{section.1.3}{Tips}{chapter.1}% 13
+\BOOKMARK [0][-]{chapter.2}{AGV Manager}{part.1}% 14
+\BOOKMARK [1][-]{section.2.1}{Overview}{chapter.2}% 15
+\BOOKMARK [1][-]{section.2.2}{Installation}{chapter.2}% 16
+\BOOKMARK [1][-]{section.2.3}{AGV configurator}{chapter.2}% 17
+\BOOKMARK [1][-]{section.2.4}{AgvManager interface}{chapter.2}% 18
+\BOOKMARK [2][-]{subsection.2.4.1}{AGV emulation}{section.2.4}% 19
+\BOOKMARK [2][-]{subsection.2.4.2}{Point windows property}{section.2.4}% 20
+\BOOKMARK [1][-]{section.2.5}{AGV script executing}{chapter.2}% 21
+\BOOKMARK [2][-]{subsection.2.5.1}{Fundamental concepts}{section.2.5}% 22
+\BOOKMARK [2][-]{subsection.2.5.2}{Main loop execution}{section.2.5}% 23
+\BOOKMARK [2][-]{subsection.2.5.3}{Mission execution}{section.2.5}% 24
+\BOOKMARK [1][-]{section.2.6}{Drag and drop example}{chapter.2}% 25
+\BOOKMARK [1][-]{section.2.7}{Summary}{chapter.2}% 26
+\BOOKMARK [-1][-]{part.2}{II Motion control}{}% 27
+\BOOKMARK [-1][-]{part.3}{III Appendices}{}% 28
+\BOOKMARK [-1][-]{part.4}{IV Bibliography}{}% 29
