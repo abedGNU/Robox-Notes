@@ -149,7 +149,7 @@ Let's say a vehicle have to go from $P_{1}$ to $P_{2}$. This can be considered a
 A mission can be composed from different MACROs. Let's say a MACRO is a macro operation that subdivide the mission. For example our mission can have 3 different MACROs. If the AGV is charging the battery, we have to stop charging (if the energy is enough to execute the whole mission), move to destination, communicate the end of the mission.
 
 Using the 2 defined constants by AgvManager our mission is composed from : MAC\_CHARGE\_STOP, MAC\_END and another macro that we can define using the \$define keyword MAC\_MOVE\_TO\_P.
-It is better to define our constants from 100 to avoid errors in the program logic. For example if the already defined constant MAC\_END have value 10, and our constant MAC\_MOVE\_TO\_P have value 10, the compiler will not give errors and the agv will behave as is not expected.
+It is better to define our constants from 100 to avoid errors in the program logic. For example if the already defined constant MAC\_END have value 10, and our constant MAC\_MOVE\_TO\_WP have value 10, the compiler will not give errors and the agv will behave as is not expected.
 
 AgvManager have in memory a list(array) of the MACROs to be executed. In the list are saved the agv number/id, MACRO code/id and other 4 parameters. 
 When the function 
@@ -173,7 +173,7 @@ More about MICRO and operations later and the commands sent to the agv in order 
 The following is a simplified explanation of the main loop of and AGV script, which is in execution behind the scene. A more complex scenario is shown in fig.\ref{fig:mainLoop}.
 When the script is executed the first time, the function \textcolor{blue}{OnApplicationStart()} is called. In this function you can initialize some variables and set some parameters. After that AgvManager wait for events e.g. mouse events, or operating mode change. And continue to execute some other functions.
 
-In the case we have more than one Agv, the execution of the functions is sequential. This mean that the set of functions of Agv 1 are called first, then those of Agv 2, then Agv 3, etc. In other words, the flowchart in fig.\ref{fig:mainLoop} and fig.\ref{fig:missionExec} are executed starting from the first Agv until the last in sequence, this flow is repeated always.
+In the case we have more than one Agv, the execution of the functions is sequential. This means that the set of functions of Agv 1 are called first, then those of Agv 2, then Agv 3, etc. In other words, the flowchart in fig.\ref{fig:mainLoop} and fig.\ref{fig:missionExec} are executed starting from the first Agv until the last in sequence, this flow is repeated always.
 
 Let's see a simple case. The AGV is in automatic mode \textcolor{blue}{(MOD\_AUTOMATIC)}, and there is no mission in progress. If the AGV is enabled, AgvManager call automatically the callback function \textcolor{blue}{onNextMission()}, where the programmer have implemented a logic to register the next mission to be executed. When a mission is in progress, AgvManager wait (wait doesn't mean stop script execution) till the end of the mission in order to call again \textcolor{blue}{onNextMission()}.
 
@@ -185,7 +185,7 @@ Let's see a simple case. The AGV is in automatic mode \textcolor{blue}{(MOD\_AUT
 
 \subsection{Mission execution}
 A mission is a set of MACROs. There is a list of MACROs, where the order of execution is assigned.
-A mission can be assigned by a call to \textcolor{blue}{onNextMission()}, and started by calling \textcolor{blue}{AgvStartMission()}.
+A mission can be assigned typically inside the callback function \textcolor{blue}{onNextMission()}, and started by calling \textcolor{blue}{AgvStartMission()}. A mission can be also assigned in any other function.
 If the list of MACROs is not empty, the effective execution of the mission begin otherwise the old MICRO continue to execute until the end.
 
 We take only one case, if the MACRO list is not empty, the function \textcolor{blue}{onExpandMacro()} is called by AgvManager.

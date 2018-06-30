@@ -129,11 +129,11 @@ By calling \textcolor{blue}{agvGetSiteInfo(int userPointId, XSiteInfo\& sInfo)} 
 The function return true if the user point exist.
 With the function \textcolor{blue}{agvSetSiteInfo(int userPointId, XSiteInfo\& sInfo)} we can set the parameter of a user point in AgvManager.\\
 
-For example the field \textcolor{blue}{bPresenza} is a boolean variable that indicate if the user point contain a load or not.
+For example the field \textcolor{blue}{bPresenza} is a boolean variable that indicate if the user point contain a loading unit or not.
 
 When executing a loading operation into the vehicle (from station to vehicle), by calling the function \textcolor{blue}{AgvExecLoad(agv,userPoint)} the value of \textcolor{blue}{bPresenza} is set to false and the vehicle status flag, \textcolor{blue}{uStatus}, corresponding to \textcolor{blue}{VST\_CARICO\_PRESENTE} is set to true.
 
-When executing an unload operation (from vehicle to the station), by calling {AgvExecUnload(agv, userPoint)} the value of {bPresenza} to true.\\
+When executing an unload operation (from vehicle to the station), by calling \textcolor{blue}{AgvExecUnload(agv, userPoint)} the value of \textcolor{blue}{bPresenza} to true. Note that these functions execute a logical load and unload. No commands are sent to agv. To let the agv execute a load or unload operations, agvRegisterOperation() must be called. \\
 
 Some fields can be read and write \textcolor{blue}{(rw)} from the script others are read only \textcolor{blue}{(ro)}.
 
@@ -824,7 +824,7 @@ if (takeOutToilet)
 endif
 \end{lstlisting}
 
-The function \textcolor{blue}{OnNextMissionDebugMessage()} is used to show debugging message in  \textcolor{red}{the vehicle information [F3]} tab.\\
+The function \textcolor{blue}{OnNextMissionDebugMessage()} is used to show debugging messages in  \textcolor{red}{the vehicle information [F3]} tab, in the box \textcolor{red}{Mission generation}.\\
 
 If the Agv \textit{have a full pallet and the pallet doesn't come out from the store, it come from the loading are}, the agv have to take the pallet to the store:
 
@@ -869,7 +869,7 @@ Pay attention to the sequence of implementing the functions or to the conditions
 Once missions are defined, we have to defined MACROs. First take a look at macros defined by AgvManager.
 
 \begin{lstlisting}[caption= MACRO defined in AgvManager]
-; Definizione codici macro
+// MACRO code definition
 $define MAC_NULL             0
 $define MAC_MOVE_TO_USER     1
 $define MAC_MOVE_TO_XY       2
@@ -958,17 +958,31 @@ For our example we can assign the following macros to each mission. Usually this
 	\end{itemize}
 \end{itemize}
 
-Once MACROs are assigned to missions, we have to assign MICROs to MACROs. This is may be done in onExpandMacro(). Remember that when onExpandMacro() return true, mean the execution of the current macro is concluded, and the next macro in the list will be expanded (executed) on the next call of onExpandMacro(), of course if the current macro is not the last one in the list.
+Once MACROs are assigned to missions, we have to assign MICROs to MACROs, this may be done in \textcolor{blue}{onExpandMacro()}. Remember that when \textcolor{blue}{onExpandMacro()} return true, mean the execution of the current macro is concluded, and the next macro in the list will be expanded (executed) on the next call of \textcolor{blue}{onExpandMacro()}, of course if the current macro is not the last one in the list.
 
-We can also end a mission and begin another one from onExpandMacro(). We don't have to do it always in onNextMission(). But keep in mind that the program should be linear and simple. Avoid \textit{spaghetti code} when is possible.
+We can also end a mission and begin another one from \textcolor{blue}{onExpandMacro()}. We don't have to do it always in \textcolor{blue}{onNextMission()}. But keep in mind that the program should be linear and simple. Avoid \textcolor{red}{spaghetti code} when is possible.
 
-When a macro is exapnaded we can see the result in vehicle information[F3], fig.\ref{figmacroexp}.
+When a macro is expanded we can see the result in vehicle information[F3], fig.\ref{figmacroexp}.
 
 \begin{figure}
 	\centering\includegraphics[scale=0.5]{agvmanager/agvManager/microDebug}
 	\caption{Macro expansion and micro details}
 	\label{figmacroexp}
 \end{figure}
+
+For example to make a loading operation, we have to call AgvRegisterOperation(), as in listing \ref{lstMACLoad}.
+
+\begin{lstlisting}[caption= Loading MACRO, label=lstMACLoad]
+case MAC_LOAD_TROLLEY
+	// par1 is the point
+	// par2 is true if there is a toilet on the trolley
+	// par3 is true it the trolley is ready to be taken out of store
+	AgvRegisterOperation(uAgv, uMission, O_LOAD, iPar2, iPar3, 0, 0, iPar1)
+	break
+
+\end{lstlisting}
+
+The call of AgvRegisterOperation in \ref{lstMACLoad}, register a MICRO of type MIC\_OPERATION.
 %------------------
 %
 %------------------
@@ -1057,7 +1071,7 @@ case MIC_SYSTEM
 	
 	case S_WAIT_INPUT
 	// wait a signal from plc. locking micro
-		if ( AgvGetInput(INP_LOAD_TERMITAED) =false )
+		if ( AgvGetInput(INP_LOAD_TERMITAED) ==false )
 			return true
 		else
 			return false
@@ -1069,6 +1083,44 @@ Keep in mind that when a micro terminate, onExecuteMicro() should return true. F
 When the signal become false, onExecuteMicro() return true and the execution of the current micro terminate.
 
 When bLastCall will be set to true? at the next execution or immediately, and the effective termination will be at the next call?
+
+
+\begin{lstlisting}[caption= Loading MIC OPERATION , label=lstOLOAD ]
+case O_LOAD
+	if (bLastCall)
+	MultiMessageState(uAgv, "Agv " + (uAgv + 1) + " : loaded from " + userId)
+	SetAgvMessage(uAgv, "")
+	; Agv has finished the load:
+	; AgvExecLoad() puts the logical content of the user point identified by userId
+	; on the agv, and removes from the user point.
+	; NOTE: the operation was sent to the agv in OnExpandMacro()
+	; expanding the macro MAC_LOAD_TROLLEY
+	AgvExecLoad(uAgv, userId)
+	; Position is no more reserved to agv
+	store_hnd.unassignAgvToLocation(uAgv, userId)
+	$ifdef EMULAZIONE_AGV_ATTIVA
+	if (EMUAGV_IsAgvEmulated(uAgv))
+	if (iPar1)
+	vInfo.uStatus = vInfo.uStatus | agvflg_toiletOnTrolley
+	if (iPar2)
+	vInfo.uStatus = vInfo.uStatus | agvflg_toiletGoingOutOfStore
+	else
+	vInfo.uStatus = vInfo.uStatus & ~agvflg_toiletGoingOutOfStore
+	endif
+	else
+	vInfo.uStatus = vInfo.uStatus & ~(agvflg_toiletOnTrolley | agvflg_toiletGoingOutOfStore)
+	endif
+	EMUAGV_SetFlags(uAgv, vInfo.uStatus)
+	endif
+	$endif
+	return true
+	else
+	MultiMessageState(uAgv, "Agv " + (uAgv + 1) + " : loading from " + userId)
+	SetAgvMessage(uAgv, "Loading")
+	return false
+	endif
+	break
+\end{lstlisting}
 
 For example if we register a micro from the category Operation, AgvManager will send some command to the vehicle. When the vehicle answer with operation concluded, AgvManager will set bLastCall to true, in this way we can terminate the micro execution.
 
