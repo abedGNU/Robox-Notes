@@ -245,22 +245,21 @@ If we want to build the path we can use \textcolor{blue}{agvAddWayPoint()} and \
 %
 %------------------
 \subsection{MICRO registration functions}
-The following functions register a micro operation or instruction:\\
+The following functions register a micro operation or instruction:
 
 \begin{enumerate}
-	\item agvRegisterPassante(,,,,) [P] command, Pass-through operation.\\
-	
 	\item agvRegisterSystemPassante(,,,,) MIC\_SYSTEM, system micro instruction.
 	\item agvRegisterSystemBloccante(,,,,) MIC\_SYSTEM, system micro instruction.\\
 	
-	\item agvReigsterOperation(,,,,) MIC\_OPERATION [O] Operation to send to the vehicle. The syntax of the command is: [Occccmmmm,type,p1,p2,p3,p4].\\
-	
+	\item agvRegisterPassante(,,,,) [P] command, Pass-through operation.
+	\item agvReigsterOperation(,,,,) MIC\_OPERATION [O] Operation to send to the vehicle. The syntax of the command is: [Occccmmmm,type,p1,p2,p3,p4].
+	\item agvRegisterMovingOperation(,,,,) MIC\_MOVE [Q] Operation with movement.\\
+		
 	\item agvRegisterWait(,,,,) [W] Wait condition operation.\\
 	
-	\item agvRegisterMovingOperation(,,,,) MIC\_MOVE [Q] Operation with movement.\\
 \end{enumerate}
 
-To get a list of all micro type search in the documentation the prefix "{MIC\_}".
+To get a list of all micro type search in the documentation the prefix "{MIC\_}". Other types of Micros are registerd directly by AgvManager like micro of type MIC\_MOVE.
 
 \subsection{Points}
 
@@ -1036,7 +1035,14 @@ $define O_WAIT_TOILET		5
 
 Micros form category MIC\_OPERATION, MIC\_SYSTEM, MIC\_PASSANTE, MIC\_WAIT are assigned in onExpandMacro(), using one of the following functions:
 \begin{lstlisting}
+	// Blocking operation
+	AgvRegisterOperation()
+	// passthrough operation
 	AgvRegisterPassante()
+	// Operation during motion
+	AgvRegisterMovingOperation()
+	
+	//
 	AgvRegisterWait()
 	AgvRegisterSystemPassante()
 	AgvRegisterSystemBloccante()
@@ -1088,36 +1094,21 @@ When bLastCall will be set to true? at the next execution or immediately, and th
 \begin{lstlisting}[caption= Loading MIC OPERATION , label=lstOLOAD ]
 case O_LOAD
 	if (bLastCall)
-	MultiMessageState(uAgv, "Agv " + (uAgv + 1) + " : loaded from " + userId)
-	SetAgvMessage(uAgv, "")
-	; Agv has finished the load:
-	; AgvExecLoad() puts the logical content of the user point identified by userId
-	; on the agv, and removes from the user point.
-	; NOTE: the operation was sent to the agv in OnExpandMacro()
-	; expanding the macro MAC_LOAD_TROLLEY
-	AgvExecLoad(uAgv, userId)
-	; Position is no more reserved to agv
-	store_hnd.unassignAgvToLocation(uAgv, userId)
-	$ifdef EMULAZIONE_AGV_ATTIVA
-	if (EMUAGV_IsAgvEmulated(uAgv))
-	if (iPar1)
-	vInfo.uStatus = vInfo.uStatus | agvflg_toiletOnTrolley
-	if (iPar2)
-	vInfo.uStatus = vInfo.uStatus | agvflg_toiletGoingOutOfStore
+		MultiMessageState(uAgv, "Agv " + (uAgv + 1) + " : loaded from " + userId)
+		SetAgvMessage(uAgv, "")
+		// Agv has finished the load:
+		// AgvExecLoad() puts the logical content of the user point identified by userId
+		// on the agv, and removes from the user point.
+		// NOTE: the operation was sent to the agv in OnExpandMacro()
+		// expanding the macro MAC_LOAD_TROLLEY
+		AgvExecLoad(uAgv, userId)
+		// Position is no more reserved to agv
+		store_hnd.unassignAgvToLocation(uAgv, userId)
+		return true
 	else
-	vInfo.uStatus = vInfo.uStatus & ~agvflg_toiletGoingOutOfStore
-	endif
-	else
-	vInfo.uStatus = vInfo.uStatus & ~(agvflg_toiletOnTrolley | agvflg_toiletGoingOutOfStore)
-	endif
-	EMUAGV_SetFlags(uAgv, vInfo.uStatus)
-	endif
-	$endif
-	return true
-	else
-	MultiMessageState(uAgv, "Agv " + (uAgv + 1) + " : loading from " + userId)
-	SetAgvMessage(uAgv, "Loading")
-	return false
+		MultiMessageState(uAgv, "Agv " + (uAgv + 1) + " : loading from " + userId)
+		SetAgvMessage(uAgv, "Loading")
+		return false
 	endif
 	break
 \end{lstlisting}

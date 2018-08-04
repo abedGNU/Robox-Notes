@@ -164,7 +164,7 @@ is called, the new MACRO is queued at the end of the list.
 
 A MACRO is composed from MICROs. Let's say, low level micro instructions to be executed by the AGV. There are different types of MICRO, can be found in the constant defintions with prefix MIC\_. For example MIC\_MOVE is a MICRO that handle the motion instruction to the AGV.
 
-A micro is registered (ask to be executed) by calling AgvRegisterSystemBloccante, agvRegisterSystemPassante or AgvRegisterOperation.
+A micro is registered (ask to be executed) by calling AgvRegisterSystemBloccante, agvRegisterSystemPassante, AgvRegisterOperation, etc.
 
 An operation is a type of MICRO, a typical kind of operations are loading and unloading, and can be performed on user points.
 More about MICRO and operations later and the commands sent to the agv in order to execute orders from AgvManager. Remember that not all MIC instruction send commands to the agv. 
